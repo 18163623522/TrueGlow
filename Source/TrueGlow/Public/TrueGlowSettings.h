@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "KuroGlowTypes.h"
-#include "KuroGlowSettings.generated.h"
+#include "TrueGlowTypes.h"
+#include "TrueGlowSettings.generated.h"
 
 UENUM()
-enum class EKuroGlowPreset : uint8
+enum class ETrueGlowPreset : uint8
 {
 	Custom UMETA(DisplayName = "Custom（手动调参）"),
 	WuWa   UMETA(DisplayName = "鸣潮（默认推荐）"),
@@ -16,21 +16,21 @@ enum class EKuroGlowPreset : uint8
 };
 
 /**
- * KuroGlow 全局配置。
+ * TrueGlow 全局配置。
  * 注意：故意不继承 UDeveloperSettings——插件运行时模块在 Default 相位加载，
  * 而 DeveloperSettings 模块那时尚未进入进程，硬 import 会导致 DLL 无法被 OS 加载。
- * Project Settings 页面由 KuroGlowEditor 模块通过 ISettingsModule 注册。
+ * Project Settings 页面由 TrueGlowEditor 模块通过 ISettingsModule 注册。
  */
 UCLASS(config = Game, defaultconfig)
-class KUROGLOW_API UKuroGlowSettings : public UObject
+class TRUEGLOW_API UTrueGlowSettings : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	static UKuroGlowSettings* Get() { return GetMutableDefault<UKuroGlowSettings>(); }
+	static UTrueGlowSettings* Get() { return GetMutableDefault<UTrueGlowSettings>(); }
 
 	/** 构建渲染线程快照（游戏线程调用）。 */
-	FKuroGlowParams BuildParams() const;
+	FTrueGlowParams BuildParams() const;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -38,11 +38,11 @@ public:
 
 	// ---------------- General ----------------
 
-	UPROPERTY(EditAnywhere, Config, Category = "General", meta = (ToolTip = "总开关（与 kg.Enable CVar 相与）"))
+	UPROPERTY(EditAnywhere, Config, Category = "General", meta = (ToolTip = "总开关（与 tg.Enable CVar 相与）"))
 	bool bEnabled = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "General", meta = (ToolTip = "选择预设后立刻把参数覆盖为该预设值，并自动存盘；之后手动改任何参数会变回 Custom"))
-	EKuroGlowPreset Preset = EKuroGlowPreset::WuWa;
+	ETrueGlowPreset Preset = ETrueGlowPreset::WuWa;
 
 	UPROPERTY(EditAnywhere, Config, Category = "General", meta = (ToolTip = "是否对 SceneCapture 渲染的视图生效"))
 	bool bAllowSceneCapture = false;
@@ -120,9 +120,9 @@ public:
 	int32 GlareTaps = 6;
 };
 
-/** 把某套预设值写入 Settings（不负责存盘）。KuroGlowPresets.cpp 实现。 */
-namespace KuroGlowPresets
+/** 把某套预设值写入 Settings（不负责存盘）。TrueGlowPresets.cpp 实现。 */
+namespace TrueGlowPresets
 {
-	KUROGLOW_API void Apply(EKuroGlowPreset Preset, UKuroGlowSettings& OutSettings);
-	KUROGLOW_API bool ApplyByName(const FString& PresetName, UKuroGlowSettings& OutSettings);
+	TRUEGLOW_API void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& OutSettings);
+	TRUEGLOW_API bool ApplyByName(const FString& PresetName, UTrueGlowSettings& OutSettings);
 }

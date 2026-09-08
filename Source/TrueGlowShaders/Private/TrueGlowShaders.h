@@ -1,7 +1,7 @@
 // Copyright pengxiwei. All Rights Reserved.
 
-// KuroGlow 的 7 个全局像素着色器声明。
-// 仅被 KuroGlowViewExtension.cpp include 一次（IMPLEMENT_GLOBAL_SHADER 要求单翻译单元）。
+// TrueGlow 的 7 个全局像素着色器声明。
+// 仅被 TrueGlowViewExtension.cpp include 一次（IMPLEMENT_GLOBAL_SHADER 要求单翻译单元）。
 
 #pragma once
 
@@ -16,11 +16,11 @@
 
 // ---------------------------------------------------------------------------
 // 1) BrightPass + 降到 1/2 分辨率：4 tap，每 tap 先做软阈值再平均（保尖峰能量）
-class FKuroGlowBrightDownsamplePS : public FGlobalShader
+class FTrueGlowBrightDownsamplePS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowBrightDownsamplePS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowBrightDownsamplePS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowBrightDownsamplePS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowBrightDownsamplePS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -42,11 +42,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 2) 通用 4-tap box 降采样（带 tint）
-class FKuroGlowDownsamplePS : public FGlobalShader
+class FTrueGlowDownsamplePS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowDownsamplePS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowDownsamplePS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowDownsamplePS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowDownsamplePS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -66,11 +66,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 3) 可分离高斯（H/V 由 Direction 决定）
-class FKuroGlowBlurPS : public FGlobalShader
+class FTrueGlowBlurPS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowBlurPS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowBlurPS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowBlurPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowBlurPS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -91,11 +91,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 4) 9-tap tent 升采样并叠加：Out = High + Tent9(Low) * Weight
-class FKuroGlowTentUpsampleAddPS : public FGlobalShader
+class FTrueGlowTentUpsampleAddPS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowTentUpsampleAddPS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowTentUpsampleAddPS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowTentUpsampleAddPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowTentUpsampleAddPS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -116,11 +116,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 5) Streak：对称 exp 衰减方向模糊（横向拉光条 / 纵向加粗）
-class FKuroGlowStreakPS : public FGlobalShader
+class FTrueGlowStreakPS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowStreakPS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowStreakPS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowStreakPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowStreakPS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -142,11 +142,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 6) Glare：多方向双半径星芒
-class FKuroGlowGlarePS : public FGlobalShader
+class FTrueGlowGlarePS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowGlarePS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowGlarePS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowGlarePS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowGlarePS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
@@ -168,11 +168,11 @@ public:
 
 // ---------------------------------------------------------------------------
 // 7) 全分辨率合成：Scene + Bloom*mul + Streak*mul + Glare*mul
-class FKuroGlowCompositePS : public FGlobalShader
+class FTrueGlowCompositePS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FKuroGlowCompositePS);
-	SHADER_USE_PARAMETER_STRUCT(FKuroGlowCompositePS, FGlobalShader);
+	DECLARE_GLOBAL_SHADER(FTrueGlowCompositePS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowCompositePS, FGlobalShader);
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Scene)
@@ -198,12 +198,12 @@ public:
 	}
 };
 
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowBrightDownsamplePS, "/Plugin/KuroGlow/Private/KuroGlowBrightDownsample.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowDownsamplePS, "/Plugin/KuroGlow/Private/KuroGlowDownsample.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowBlurPS, "/Plugin/KuroGlow/Private/KuroGlowBlurGaussian.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowTentUpsampleAddPS, "/Plugin/KuroGlow/Private/KuroGlowTentUpsampleAdd.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowStreakPS, "/Plugin/KuroGlow/Private/KuroGlowStreak.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowGlarePS, "/Plugin/KuroGlow/Private/KuroGlowGlare.usf", "MainPS", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FKuroGlowCompositePS, "/Plugin/KuroGlow/Private/KuroGlowComposite.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowBrightDownsamplePS, "/Plugin/TrueGlow/Private/TrueGlowBrightDownsample.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowDownsamplePS, "/Plugin/TrueGlow/Private/TrueGlowDownsample.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowBlurPS, "/Plugin/TrueGlow/Private/TrueGlowBlurGaussian.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowTentUpsampleAddPS, "/Plugin/TrueGlow/Private/TrueGlowTentUpsampleAdd.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowStreakPS, "/Plugin/TrueGlow/Private/TrueGlowStreak.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowGlarePS, "/Plugin/TrueGlow/Private/TrueGlowGlare.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowCompositePS, "/Plugin/TrueGlow/Private/TrueGlowComposite.usf", "MainPS", SF_Pixel);
 
 #endif // KG_SHADERS_ENABLED

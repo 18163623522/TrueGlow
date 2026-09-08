@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "0.1.0",
-	"FriendlyName": "KuroGlow",
+	"FriendlyName": "TrueGlow",
 	"Description": "HDR physically-inspired post-process glow: pyramid bloom + anamorphic streaks + lens glare, injected before tonemap via SceneViewExtension (UE 4.26, no engine modification).",
 	"Category": "Rendering",
 	"CreatedBy": "pengxiwei",
@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "KuroGlowShaders",
+			"Name": "TrueGlowShaders",
 			"Type": "Runtime",
 			"LoadingPhase": "PostConfigInit",
 			"PlatformAllowList": [
@@ -24,7 +24,7 @@
 			]
 		},
 		{
-			"Name": "KuroGlow",
+			"Name": "TrueGlow",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"PlatformAllowList": [
@@ -32,7 +32,7 @@
 			]
 		},
 		{
-			"Name": "KuroGlowEditor",
+			"Name": "TrueGlowEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit",
 			"PlatformAllowList": [

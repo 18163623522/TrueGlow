@@ -1,11 +1,11 @@
 // Copyright pengxiwei. All Rights Reserved.
 
-#include "KuroGlowSettings.h"
+#include "TrueGlowSettings.h"
 
-namespace KuroGlowPresets
+namespace TrueGlowPresets
 {
 
-void Apply(EKuroGlowPreset Preset, UKuroGlowSettings& S)
+void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 {
 	// 公共默认（鸣潮基线）
 	S.bEnabled = true;
@@ -40,14 +40,14 @@ void Apply(EKuroGlowPreset Preset, UKuroGlowSettings& S)
 
 	switch (Preset)
 	{
-	case EKuroGlowPreset::WuWa:
+	case ETrueGlowPreset::WuWa:
 		S.BloomIntensity = 1.00f;
 		S.StreakIntensity = 0.35f;
 		S.StreakLength = 480.0f;
 		S.GlareIntensity = 0.25f;
 		break;
 
-	case EKuroGlowPreset::Neon:
+	case ETrueGlowPreset::Neon:
 		S.BloomIntensity = 1.40f;
 		S.StreakIntensity = 0.70f;
 		S.StreakLength = 720.0f;
@@ -58,7 +58,7 @@ void Apply(EKuroGlowPreset Preset, UKuroGlowSettings& S)
 		S.GlareTint = FLinearColor(0.85f, 0.95f, 1.00f, 1.0f);
 		break;
 
-	case EKuroGlowPreset::Subtle:
+	case ETrueGlowPreset::Subtle:
 		S.BloomIntensity = 0.60f;
 		S.BloomBlurRadius = 1.0f;
 		S.StreakIntensity = 0.12f;
@@ -66,28 +66,28 @@ void Apply(EKuroGlowPreset Preset, UKuroGlowSettings& S)
 		S.GlareIntensity = 0.10f;
 		break;
 
-	case EKuroGlowPreset::Custom:
+	case ETrueGlowPreset::Custom:
 	default:
 		break;
 	}
 }
 
-bool ApplyByName(const FString& PresetName, UKuroGlowSettings& OutSettings)
+bool ApplyByName(const FString& PresetName, UTrueGlowSettings& OutSettings)
 {
 	const FString Name = PresetName.ToLower();
 
-	EKuroGlowPreset Preset = EKuroGlowPreset::Custom;
+	ETrueGlowPreset Preset = ETrueGlowPreset::Custom;
 	if (Name == TEXT("wuwa") || Name == TEXT("鸣潮"))
 	{
-		Preset = EKuroGlowPreset::WuWa;
+		Preset = ETrueGlowPreset::WuWa;
 	}
 	else if (Name == TEXT("neon"))
 	{
-		Preset = EKuroGlowPreset::Neon;
+		Preset = ETrueGlowPreset::Neon;
 	}
 	else if (Name == TEXT("subtle"))
 	{
-		Preset = EKuroGlowPreset::Subtle;
+		Preset = ETrueGlowPreset::Subtle;
 	}
 	else
 	{
@@ -99,4 +99,4 @@ bool ApplyByName(const FString& PresetName, UKuroGlowSettings& OutSettings)
 	return true;
 }
 
-} // namespace KuroGlowPresets
+} // namespace TrueGlowPresets

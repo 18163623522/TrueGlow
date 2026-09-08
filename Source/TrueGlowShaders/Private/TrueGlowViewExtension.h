@@ -5,20 +5,20 @@
 #include "CoreMinimal.h"
 #include "SceneViewExtension.h"
 #include "ScreenPass.h"
-#include "KuroGlowTypes.h"
+#include "TrueGlowTypes.h"
 
 /**
- * KuroGlow 视图扩展：
+ * TrueGlow 视图扩展：
  * 订阅 EPostProcessingPass::MotionBlur 的 after-pass 回调（该调用点在 TAA 之后、
  * 曝光/bloom/tonemap 之前的 HDR 线性段，且无条件执行），在回调里构建整条辉光 RDG 管线。
  * 本类所在模块必须以 PostConfigInit 相位加载（IMPLEMENT_GLOBAL_SHADER 的硬性要求）。
  */
-class FKuroGlowViewExtension : public FSceneViewExtensionBase
+class FTrueGlowViewExtension : public FSceneViewExtensionBase
 {
 public:
-	FKuroGlowViewExtension(const FAutoRegister& AutoRegister);
+	FTrueGlowViewExtension(const FAutoRegister& AutoRegister);
 
-	static TSharedRef<FKuroGlowViewExtension, ESPMode::ThreadSafe> Create();
+	static TSharedRef<FTrueGlowViewExtension, ESPMode::ThreadSafe> Create();
 
 	// ISceneViewExtension 纯虚接口
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {}
@@ -40,5 +40,5 @@ private:
 
 	/** 游戏线程在 BeginRenderViewFamily 里刷新，渲染线程回调里加锁拷贝。 */
 	FCriticalSection ParamsCS;
-	FKuroGlowParams Params;
+	FTrueGlowParams Params;
 };

@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 
 /**
- * 渲染线程每帧消费的参数快照（游戏线程从 UKuroGlowSettings + CVar 构建）。
+ * 渲染线程每帧消费的参数快照（游戏线程从 UTrueGlowSettings + CVar 构建）。
  * 纯 POD，拷贝开销可忽略。
  */
-struct FKuroGlowParams
+struct FTrueGlowParams
 {
 	// General
 	bool bEnabled = true;

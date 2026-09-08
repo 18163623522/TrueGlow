@@ -1,6 +1,6 @@
 // Copyright pengxiwei. All Rights Reserved.
 
-// 通用 4-tap box 降采样（带 tint）。仅用于 KuroGlow 自己的等尺寸纹理（UV 恒等映射）。
+// 通用 4-tap box 降采样（带 tint）。仅用于 TrueGlow 自己的等尺寸纹理（UV 恒等映射）。
 
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/ScreenPass.ush"

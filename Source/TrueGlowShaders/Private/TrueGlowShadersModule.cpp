@@ -1,8 +1,8 @@
 // Copyright pengxiwei. All Rights Reserved.
 
-#include "KuroGlowShaderBridge.h"
-#include "KuroGlowCVars.h"
-#include "KuroGlowViewExtension.h"
+#include "TrueGlowShaderBridge.h"
+#include "TrueGlowCVars.h"
+#include "TrueGlowViewExtension.h"
 
 #include "HAL/IConsoleManager.h"
 #include "Interfaces/IPluginManager.h"
@@ -10,46 +10,46 @@
 #include "Modules/ModuleManager.h"
 #include "ShaderCore.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogKuroGlow, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogTrueGlow, Log, All);
 
 // ---------------------------------------------------------------------------
 // CVars（实时调参入口；负值 = 不覆盖 Project Settings）
 TAutoConsoleVariable<int32> GCVarKGEnable(
-	TEXT("kg.Enable"), 1,
-	TEXT("KuroGlow master switch. 0 = passthrough (no cost)."),
+	TEXT("tg.Enable"), 1,
+	TEXT("TrueGlow master switch. 0 = passthrough (no cost)."),
 	ECVF_Default);
 
 TAutoConsoleVariable<float> GCVarKGBloomIntensity(
-	TEXT("kg.Bloom.Intensity"), -1.0f,
+	TEXT("tg.Bloom.Intensity"), -1.0f,
 	TEXT(">= 0 overrides BloomIntensity from settings."),
 	ECVF_Default);
 
 TAutoConsoleVariable<float> GCVarKGBloomThreshold(
-	TEXT("kg.Bloom.Threshold"), -1.0f,
+	TEXT("tg.Bloom.Threshold"), -1.0f,
 	TEXT(">= 0 overrides BloomThreshold from settings."),
 	ECVF_Default);
 
 TAutoConsoleVariable<int32> GCVarKGBloomLevels(
-	TEXT("kg.Bloom.Levels"), -1,
+	TEXT("tg.Bloom.Levels"), -1,
 	TEXT(">= 1 overrides BloomLevels from settings (1..6)."),
 	ECVF_Default);
 
 TAutoConsoleVariable<float> GCVarKGStreakIntensity(
-	TEXT("kg.Streak.Intensity"), -1.0f,
+	TEXT("tg.Streak.Intensity"), -1.0f,
 	TEXT(">= 0 overrides StreakIntensity from settings."),
 	ECVF_Default);
 
 TAutoConsoleVariable<float> GCVarKGStreakLength(
-	TEXT("kg.Streak.Length"), -1.0f,
+	TEXT("tg.Streak.Length"), -1.0f,
 	TEXT(">= 0 overrides StreakLength from settings."),
 	ECVF_Default);
 
 TAutoConsoleVariable<float> GCVarKGGlareIntensity(
-	TEXT("kg.Glare.Intensity"), -1.0f,
+	TEXT("tg.Glare.Intensity"), -1.0f,
 	TEXT(">= 0 overrides GlareIntensity from settings."),
 	ECVF_Default);
 
-namespace KuroGlowCVars
+namespace TrueGlowCVars
 {
 	bool IsEnabled() { return GCVarKGEnable.GetValueOnGameThread() != 0; }
 	float BloomIntensityOverride() { return GCVarKGBloomIntensity.GetValueOnGameThread(); }
@@ -65,32 +65,32 @@ namespace KuroGlowCVars
 namespace
 {
 	FCriticalSection GProviderCS;
-	FKuroGlowShaderBridge::FParamsProvider GParamsProvider;
+	FTrueGlowShaderBridge::FParamsProvider GParamsProvider;
 }
 
-void FKuroGlowShaderBridge::SetParamsProvider(FParamsProvider InProvider)
+void FTrueGlowShaderBridge::SetParamsProvider(FParamsProvider InProvider)
 {
 	FScopeLock Lock(&GProviderCS);
 	GParamsProvider = MoveTemp(InProvider);
 }
 
-FKuroGlowParams FKuroGlowShaderBridge::GetParamsSnapshot()
+FTrueGlowParams FTrueGlowShaderBridge::GetParamsSnapshot()
 {
 	FScopeLock Lock(&GProviderCS);
-	return GParamsProvider ? GParamsProvider() : FKuroGlowParams();
+	return GParamsProvider ? GParamsProvider() : FTrueGlowParams();
 }
 
 // ---------------------------------------------------------------------------
-class FKuroGlowShadersModule : public IModuleInterface
+class FTrueGlowShadersModule : public IModuleInterface
 {
 public:
 	virtual void StartupModule() override
 	{
-		const TSharedPtr<IPlugin> ThisPlugin = IPluginManager::Get().FindPlugin(TEXT("KuroGlow"));
+		const TSharedPtr<IPlugin> ThisPlugin = IPluginManager::Get().FindPlugin(TEXT("TrueGlow"));
 		if (ThisPlugin.IsValid())
 		{
 			const FString ShaderDir = FPaths::Combine(ThisPlugin->GetBaseDir(), TEXT("Shaders"));
-			AddShaderSourceDirectoryMapping(TEXT("/Plugin/KuroGlow"), ShaderDir);
+			AddShaderSourceDirectoryMapping(TEXT("/Plugin/TrueGlow"), ShaderDir);
 		}
 
 		// 本模块 PostConfigInit 加载时 GEngine 尚未创建，而注册视图扩展需要它；
@@ -101,7 +101,7 @@ public:
 		}
 		else
 		{
-			FCoreDelegates::OnPostEngineInit.AddRaw(this, &FKuroGlowShadersModule::CreateExtension);
+			FCoreDelegates::OnPostEngineInit.AddRaw(this, &FTrueGlowShadersModule::CreateExtension);
 		}
 	}
 
@@ -116,12 +116,12 @@ private:
 	{
 		if (!Extension.IsValid())
 		{
-			Extension = FKuroGlowViewExtension::Create();
-			UE_LOG(LogKuroGlow, Log, TEXT("KuroGlow shaders module up; view extension registered (kg.Enable 1)."));
+			Extension = FTrueGlowViewExtension::Create();
+			UE_LOG(LogTrueGlow, Log, TEXT("TrueGlow shaders module up; view extension registered (tg.Enable 1)."));
 		}
 	}
 
-	TSharedPtr<FKuroGlowViewExtension, ESPMode::ThreadSafe> Extension;
+	TSharedPtr<FTrueGlowViewExtension, ESPMode::ThreadSafe> Extension;
 };
 
-IMPLEMENT_MODULE(FKuroGlowShadersModule, KuroGlowShaders)
+IMPLEMENT_MODULE(FTrueGlowShadersModule, TrueGlowShaders)

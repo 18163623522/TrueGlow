@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class KuroGlowEditor : ModuleRules
+public class TrueGlow : ModuleRules
 {
-	public KuroGlowEditor(ReadOnlyTargetRules Target) : base(Target)
+	public TrueGlow(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -11,8 +11,7 @@ public class KuroGlowEditor : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"KuroGlow",
-			"Settings",
+			"TrueGlowShaders",
 		});
 	}
 }

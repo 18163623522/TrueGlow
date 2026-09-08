@@ -1,13 +1,13 @@
 // Copyright pengxiwei. All Rights Reserved.
 
-#include "KuroGlowSettings.h"
-#include "KuroGlowCVars.h"
+#include "TrueGlowSettings.h"
+#include "TrueGlowCVars.h"
 
-FKuroGlowParams UKuroGlowSettings::BuildParams() const
+FTrueGlowParams UTrueGlowSettings::BuildParams() const
 {
-	FKuroGlowParams P;
+	FTrueGlowParams P;
 
-	P.bEnabled = bEnabled && KuroGlowCVars::IsEnabled();
+	P.bEnabled = bEnabled && TrueGlowCVars::IsEnabled();
 	P.bAllowSceneCapture = bAllowSceneCapture;
 
 	P.bBloomEnabled = bBloomEnabled;
@@ -17,9 +17,9 @@ FKuroGlowParams UKuroGlowSettings::BuildParams() const
 	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 6);
 	P.BloomBlurRadius = FMath::Clamp(BloomBlurRadius, 0.0f, 6.0f);
 
-	const float BloomIntensityO = KuroGlowCVars::BloomIntensityOverride();
-	const float BloomThresholdO = KuroGlowCVars::BloomThresholdOverride();
-	const int32 BloomLevelsO = KuroGlowCVars::BloomLevelsOverride();
+	const float BloomIntensityO = TrueGlowCVars::BloomIntensityOverride();
+	const float BloomThresholdO = TrueGlowCVars::BloomThresholdOverride();
+	const int32 BloomLevelsO = TrueGlowCVars::BloomLevelsOverride();
 	if (BloomIntensityO >= 0.0f) { P.BloomIntensity = BloomIntensityO; }
 	if (BloomThresholdO >= 0.0f) { P.BloomThreshold = BloomThresholdO; }
 	if (BloomLevelsO >= 1) { P.BloomLevels = FMath::Clamp(BloomLevelsO, 1, 6); }
@@ -43,8 +43,8 @@ FKuroGlowParams UKuroGlowSettings::BuildParams() const
 	P.StreakThickness = FMath::Clamp(StreakThickness, 1.0f, 16.0f);
 	P.StreakAttenuation = FMath::Clamp(StreakAttenuation, 0.05f, 1.0f);
 	P.StreakPasses = FMath::Clamp(StreakPasses, 1, 8);
-	const float StreakIntensityO = KuroGlowCVars::StreakIntensityOverride();
-	const float StreakLengthO = KuroGlowCVars::StreakLengthOverride();
+	const float StreakIntensityO = TrueGlowCVars::StreakIntensityOverride();
+	const float StreakLengthO = TrueGlowCVars::StreakLengthOverride();
 	if (StreakIntensityO >= 0.0f) { P.StreakIntensity = StreakIntensityO; }
 	if (StreakLengthO >= 0.0f) { P.StreakLength = FMath::Clamp(StreakLengthO, 16.0f, 2048.0f); }
 
@@ -55,31 +55,31 @@ FKuroGlowParams UKuroGlowSettings::BuildParams() const
 	P.GlareRadius1 = FMath::Clamp(GlareRadius1, 4.0f, 128.0f);
 	P.GlareRadius2 = FMath::Clamp(GlareRadius2, 8.0f, 512.0f);
 	P.GlareTaps = FMath::Clamp(GlareTaps, 2, 16);
-	const float GlareIntensityO = KuroGlowCVars::GlareIntensityOverride();
+	const float GlareIntensityO = TrueGlowCVars::GlareIntensityOverride();
 	if (GlareIntensityO >= 0.0f) { P.GlareIntensity = GlareIntensityO; }
 
 	return P;
 }
 
 #if WITH_EDITOR
-void UKuroGlowSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void UTrueGlowSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	if (PropertyChangedEvent.Property)
 	{
 		const FName PropertyName = PropertyChangedEvent.Property->GetFName();
 
-		if (PropertyName == GET_MEMBER_NAME_CHECKED(UKuroGlowSettings, Preset))
+		if (PropertyName == GET_MEMBER_NAME_CHECKED(UTrueGlowSettings, Preset))
 		{
-			if (Preset != EKuroGlowPreset::Custom)
+			if (Preset != ETrueGlowPreset::Custom)
 			{
-				KuroGlowPresets::Apply(Preset, *this);
+				TrueGlowPresets::Apply(Preset, *this);
 				SaveConfig();
 			}
 		}
 		else
 		{
 			// 手动改任何参数 → 脱离预设（保留用户值）
-			Preset = EKuroGlowPreset::Custom;
+			Preset = ETrueGlowPreset::Custom;
 			SaveConfig();
 		}
 	}

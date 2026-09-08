@@ -1,4 +1,4 @@
-# KuroGlow — UE4.26 物理辉光插件（鸣潮观感）
+# TrueGlow — UE4.26 物理辉光插件（鸣潮观感）
 
 对标 Fab 的 REAL BLOOM，默认预设调出鸣潮式辉光：**超宽半径 HDR 金字塔 Bloom + 变形镜头横向 Streak + 点状星芒 Glare**。
 纯插件实现，不改引擎源码；在 tonemap 之前的 HDR 线性段注入，观感与光线追踪截图的镜头眩光一致。
@@ -20,9 +20,9 @@ after-pass 回调（`PostProcessing.cpp:596` 无条件执行，位于 TAA 之后
 
 | 模块 | 类型/相位 | 内容 |
 |---|---|---|
-| `KuroGlowShaders` | Runtime / **PostConfigInit** | 7 个 FGlobalShader + 视图扩展 + CVar + 参数桥 |
-| `KuroGlow` | Runtime / Default | `UKuroGlowSettings`(UCLASS config) + 预设 + 控制台命令 |
-| `KuroGlowEditor` | Editor / PostEngineInit | Project Settings 页面注册 |
+| `TrueGlowShaders` | Runtime / **PostConfigInit** | 7 个 FGlobalShader + 视图扩展 + CVar + 参数桥 |
+| `TrueGlow` | Runtime / Default | `UTrueGlowSettings`(UCLASS config) + 预设 + 控制台命令 |
+| `TrueGlowEditor` | Editor / PostEngineInit | Project Settings 页面注册 |
 
 > 单模块无法同时满足两个引擎硬约束：
 > ① `IMPLEMENT_GLOBAL_SHADER` 要求模块在 `InitializeShaderTypes` 之前加载完（否则静态初始化
@@ -32,26 +32,26 @@ after-pass 回调（`PostProcessing.cpp:596` 无条件执行，位于 TAA 之后
 
 ## 安装
 
-1. 本目录 junction/复制到目标工程 `Plugins/KuroGlow`（或引擎 `Engine/Plugins/Marketplace/`）
-2. `.uproject` 的 Plugins 里启用 `"KuroGlow": true`
+1. 本目录 junction/复制到目标工程 `Plugins/TrueGlow`（或引擎 `Engine/Plugins/Marketplace/`）
+2. `.uproject` 的 Plugins 里启用 `"TrueGlow": true`
 3. 编译：
    ```
    <Engine>/Engine/Build/BatchFiles/Build.bat <Project>Editor Win64 Development \
-     -Project="<Project>.uproject" -Module=KuroGlowShaders -WaitMutex
-   （KuroGlow / KuroGlowEditor 同理；或直接全量编译让 UBT 自动生成 manifest）
+     -Project="<Project>.uproject" -Module=TrueGlowShaders -WaitMutex
+   （TrueGlow / TrueGlowEditor 同理；或直接全量编译让 UBT 自动生成 manifest）
    ```
 4. `-Module=` 单模块编译**不会**生成 `Binaries/Win64/UE4Editor.modules`，模块管理器会找不到模块；
    首次需手写一份（BuildId 抄引擎 `Engine/Binaries/Win64/UE4Editor.modules`），全量编译后 UBT 会覆盖为正版。
 
 ## 使用
 
-- **总开关**：`kg.Enable 0/1`（0 = 完全旁路零开销）；Project Settings → Plugins → KuroGlow
+- **总开关**：`tg.Enable 0/1`（0 = 完全旁路零开销）；Project Settings → Plugins → TrueGlow
 - **预设**：设置页 Preset 下拉（WuWa 鸣潮[默认] / Neon 赛博 / Subtle 克制），或控制台
-  `kg.ApplyPreset WuWa|Neon|Subtle`
-- **关引擎自带 bloom**（避免双重辉光）：控制台 `kg.SetupVolume` 生成全局 PostProcessVolume 并置
+  `tg.ApplyPreset WuWa|Neon|Subtle`
+- **关引擎自带 bloom**（避免双重辉光）：控制台 `tg.SetupVolume` 生成全局 PostProcessVolume 并置
   BloomIntensity=0
-- **实时调参 CVar**：`kg.Bloom.Intensity/Threshold/Levels`、`kg.Streak.Intensity/Length`、
-  `kg.Glare.Intensity`（负值=不覆盖设置页）
+- **实时调参 CVar**：`tg.Bloom.Intensity/Threshold/Levels`、`tg.Streak.Intensity/Length`、
+  `tg.Glare.Intensity`（负值=不覆盖设置页）
 
 ### 参数速查
 
@@ -73,8 +73,8 @@ after-pass 回调（`PostProcessing.cpp:596` 无条件执行，位于 TAA 之后
 ## 目录
 
 ```
-Source/KuroGlowShaders/  # shader 声明 + 视图扩展 + RDG 管线
-Source/KuroGlow/         # 设置/预设/控制台命令
-Source/KuroGlowEditor/   # 设置页注册
-Shaders/Private/         # 7 个 .usf + KuroGlowCommon.ush
+Source/TrueGlowShaders/  # shader 声明 + 视图扩展 + RDG 管线
+Source/TrueGlow/         # 设置/预设/控制台命令
+Source/TrueGlowEditor/   # 设置页注册
+Shaders/Private/         # 7 个 .usf + TrueGlowCommon.ush
 ```

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnrealBuildTool;
 
-public class KuroGlowShaders : ModuleRules
+public class TrueGlowShaders : ModuleRules
 {
-	public KuroGlowShaders(ReadOnlyTargetRules Target) : base(Target)
+	public TrueGlowShaders(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -32,7 +32,7 @@ public class KuroGlowShaders : ModuleRules
 		else
 		{
 			throw new BuildException(
-				"KuroGlowShaders needs Engine/Source/Runtime/Renderer/Private on the include path " +
+				"TrueGlowShaders needs Engine/Source/Runtime/Renderer/Private on the include path " +
 				"(ScreenPass.h / PostProcess/PostProcessMaterial.h). Could not locate the engine directory. " +
 				"This plugin is pinned to a local source-build UE 4.26.2; set UE426_ENGINE_ROOT if auto-detection fails.");
 		}
