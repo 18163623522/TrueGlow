@@ -1,0 +1,30 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 通用 4-tap box 降采样（带 tint）。仅用于 KuroGlow 自己的等尺寸纹理（UV 恒等映射）。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float4 InputUVScaleBias;
+float4 Tint;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 InUV = UV * InputUVScaleBias.xy + InputUVScaleBias.zw;
+
+	const float2 Off = Input_ExtentInverse;
+
+	float4 S0 = Texture2DSampleLevel(InputTexture, InputSampler, clamp(InUV + Off * float2(-1.0, -1.0), Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+	float4 S1 = Texture2DSampleLevel(InputTexture, InputSampler, clamp(InUV + Off * float2( 1.0, -1.0), Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+	float4 S2 = Texture2DSampleLevel(InputTexture, InputSampler, clamp(InUV + Off * float2(-1.0,  1.0), Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+	float4 S3 = Texture2DSampleLevel(InputTexture, InputSampler, clamp(InUV + Off * float2( 1.0,  1.0), Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+
+	OutColor = ((S0 + S1 + S2 + S3) * 0.25) * Tint;
+}

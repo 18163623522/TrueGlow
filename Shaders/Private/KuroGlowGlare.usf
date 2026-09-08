@@ -1,0 +1,52 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// Glare：多方向双半径星芒。4 方向 = 0/45/90/135 度，6 方向 = 30 度步进。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float Radius1Pixels;
+float Radius2Pixels;
+uint TapsPerDirection;
+uint DirectionCount;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+
+	const int Dirs = int(DirectionCount);
+	const int Taps = int(TapsPerDirection);
+	const float AngleStep = PI / float(Dirs);
+
+	float4 Sum = float4(0.0, 0.0, 0.0, 0.0);
+
+	for (int d = 0; d < Dirs; ++d)
+	{
+		const float2 Dir = float2(cos(AngleStep * float(d)), sin(AngleStep * float(d)));
+		const float2 Step1 = Dir * Radius1Pixels * Input_ExtentInverse;
+		const float2 Step2 = Dir * Radius2Pixels * Input_ExtentInverse;
+
+		for (int k = 1; k <= Taps; ++k)
+		{
+			const float t = float(k) / float(Taps);
+			float w = 1.0 - t;
+			w *= w;
+
+			Sum += w * Texture2DSampleLevel(
+				InputTexture, InputSampler,
+				clamp(UV + Step1 * t, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+
+			Sum += w * Texture2DSampleLevel(
+				InputTexture, InputSampler,
+				clamp(UV + Step2 * t, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+		}
+	}
+
+	OutColor = Sum / float(Dirs * Taps * 2);
+}

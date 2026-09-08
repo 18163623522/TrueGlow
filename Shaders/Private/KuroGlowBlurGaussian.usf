@@ -1,0 +1,42 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 可分离高斯：Direction = (1,0) 水平 / (0,1) 垂直，Radius/Sigma 由 C++ 传入。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float2 Direction;
+uint Radius;
+float Sigma;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 DirUV = Direction * Input_ExtentInverse;
+
+	const int R = int(Radius);
+	const float InvTwoSigmaSq = 1.0 / (2.0 * max(Sigma * Sigma, 0.25));
+
+	float TotalWeight = 0.0;
+	float4 Sum = float4(0.0, 0.0, 0.0, 0.0);
+
+	for (int k = -R; k <= R; ++k)
+	{
+		const float fk = float(k);
+		const float w = exp(-(fk * fk) * InvTwoSigmaSq);
+
+		Sum += w * Texture2DSampleLevel(
+			InputTexture, InputSampler,
+			clamp(UV + DirUV * fk, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+
+		TotalWeight += w;
+	}
+
+	OutColor = Sum / max(TotalWeight, 0.0001);
+}

@@ -1,0 +1,41 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// Streak：对称方向模糊，exp(-|k|*Attenuation) 衰减，能量归一。
+// 横向 (1,0) 反复迭代拉出 anamorphic 光条，纵向 (0,1) 一次加粗。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float2 Direction;
+float StepPixels;
+uint Taps;
+float Attenuation;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 StepUV = Direction * StepPixels * Input_ExtentInverse;
+
+	const int T = int(Taps);
+	float TotalWeight = 0.0;
+	float4 Sum = float4(0.0, 0.0, 0.0, 0.0);
+
+	for (int k = -T; k <= T; ++k)
+	{
+		const float w = exp(-abs(float(k)) * Attenuation);
+
+		Sum += w * Texture2DSampleLevel(
+			InputTexture, InputSampler,
+			clamp(UV + StepUV * float(k), Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+
+		TotalWeight += w;
+	}
+
+	OutColor = Sum / max(TotalWeight, 0.0001);
+}

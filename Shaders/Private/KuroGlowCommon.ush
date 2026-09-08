@@ -1,0 +1,56 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+#pragma once
+
+// Jimenez 风格软阈值：膝区二次抬升、高于阈值线性，Knee→0 退化为硬阈值。
+float3 KuroGlowSoftThreshold(float3 Color, float Threshold, float Knee)
+{
+	float3 Result = float3(0.0, 0.0, 0.0);
+
+	[unroll]
+	for (int i = 0; i < 3; ++i)
+	{
+		float x = Color[i];
+		float v = 0.0;
+
+		if (Knee < 0.0001)
+		{
+			v = max(0.0, x - Threshold);
+		}
+		else if (x <= Threshold - Knee)
+		{
+			v = 0.0;
+		}
+		else if (x >= Threshold + Knee)
+		{
+			v = x - Threshold;
+		}
+		else
+		{
+			float t = x - Threshold + Knee;
+			v = t * t / (4.0 * Knee);
+		}
+
+		Result[i] = v;
+	}
+
+	return Result;
+}
+
+// COD:AW 式 9-tap tent（覆盖 4x4 像素区域，双线性权重 1-2-1）
+float4 KuroGlowTent9(Texture2D Tex, SamplerState Samp, float2 UV, float2 Texel)
+{
+	float4 C00 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2(-1.0, -1.0), 0);
+	float4 C10 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2( 0.0, -1.0), 0);
+	float4 C20 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2( 1.0, -1.0), 0);
+	float4 C01 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2(-1.0,  0.0), 0);
+	float4 C11 = Texture2DSampleLevel(Tex, Samp, UV, 0);
+	float4 C21 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2( 1.0,  0.0), 0);
+	float4 C02 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2(-1.0,  1.0), 0);
+	float4 C12 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2( 0.0,  1.0), 0);
+	float4 C22 = Texture2DSampleLevel(Tex, Samp, UV + Texel * float2( 1.0,  1.0), 0);
+
+	return (C00 + 2.0 * C10 + C20 +
+	        2.0 * C01 + 4.0 * C11 + 2.0 * C21 +
+	        C02 + 2.0 * C12 + C22) / 16.0;
+}

@@ -1,0 +1,29 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 9-tap tent 升采样并叠加：Out = High(UV) + Tent9(Low) * Weight
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+#include "/Plugin/KuroGlow/Private/KuroGlowCommon.ush"
+
+Texture2D InputTexture;   // 粗级（低分辨率）
+SamplerState InputSampler;
+
+Texture2D HighTexture;    // 细级（与输出同分辨率）
+SamplerState HighSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float4 Weight;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 InUV = clamp(UV, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax);
+
+	float4 High = Texture2DSampleLevel(HighTexture, HighSampler, UV, 0);
+	float4 Low = KuroGlowTent9(InputTexture, InputSampler, InUV, Input_ExtentInverse);
+
+	OutColor = High + Low * Weight;
+}

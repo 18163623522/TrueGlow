@@ -1,0 +1,44 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 全分辨率合成：Scene + Bloom*BloomMul + Streak*StreakMul + Glare*GlareMul（HDR 加法）。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D SceneTexture;
+SamplerState SceneSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Scene)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float4 SceneUVScaleBias;
+
+Texture2D BloomTexture;
+SamplerState BloomSampler;
+float4 BloomMul;
+
+Texture2D StreakTexture;
+SamplerState StreakSampler;
+float4 StreakMul;
+
+Texture2D GlareTexture;
+SamplerState GlareSampler;
+float4 GlareMul;
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+
+	const float2 SceneUV = clamp(
+		UV * SceneUVScaleBias.xy + SceneUVScaleBias.zw,
+		Scene_UVViewportBilinearMin, Scene_UVViewportBilinearMax);
+
+	float4 Scene = Texture2DSampleLevel(SceneTexture, SceneSampler, SceneUV, 0);
+
+	float3 Glow =
+		  Texture2DSampleLevel(BloomTexture,  BloomSampler,  UV, 0).rgb * BloomMul.rgb
+		+ Texture2DSampleLevel(StreakTexture, StreakSampler, UV, 0).rgb * StreakMul.rgb
+		+ Texture2DSampleLevel(GlareTexture,  GlareSampler,  UV, 0).rgb * GlareMul.rgb;
+
+	OutColor = float4(Scene.rgb + Glow, Scene.a);
+}
