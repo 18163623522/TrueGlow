@@ -149,8 +149,10 @@ BrightHalf                                         [½分辨率]
   ▼
 BloomResult(=U[0])
 BrightHalf ──④4-tap 降采样──► QuarterBase          [¼分辨率]
-  ├─⑤Streak：Passes 次横向模糊（±12 tap，exp(-|k|·attenuation) 权重，归一化）
-  │            + 1 次纵向加粗（±2 tap）
+  ├─⑤Streak 横向组：Passes 次横向模糊（±12 tap，exp(-|k|·attenuation) 权重，归一化）
+  │              + 1 次纵向加粗（±2 tap）
+  ├─⑤' Streak 纵向组（可选，独立开关/长度/强度）：同算法反向 (0,1)，
+  │              + 1 次横向收窄；衰减/tint/迭代与横向共用
   └─⑥Glare：Dirs(4|6) × Taps × 双半径采样，w=(1-t)²
   ▼
 ⑦Composite：Scene + Bloom·I_b + Streak·T_s·I_s + Glare·T_g·I_g   [全分辨率]
@@ -169,7 +171,12 @@ x ≥ T+K : x - T
 ```
 
 **关键纪律：阈值在 4-tap 平均之前逐 tap 施加**——先平均再阈值会把亚像素尖峰抹掉，
-尖峰正是 streak/glare 的能量源。
+尖峰正是 streak/glare 的能量源。过阈值后的能量统一乘 `BloomBrightMultiplier`（bright-pass
+增益，直接预乘进 Tint₀，零 shader 开销）。
+
+**每级高斯的各向异性**：`BloomScale(X,Y)` 直接乘进 H/V pass 的采样步长（等效高斯核
+σ_x/σ_y 分别缩放），(1,1) 各向同性、(4,1) 横向椭圆光雾、(1,4) 纵向光幕。`bBloomFastMode`
+跳过全部高斯 pass 换帧率（金字塔 tent 合并仍提供基础扩散）。
 
 **③ Tent9**（COD:AW / Karis 式，9 次双线性覆盖 4×4 区域）：
 
@@ -205,7 +212,8 @@ FKuroGlowParams（POD 快照，游戏线程每帧 BeginRenderViewFamily 刷新�
 渲染线程回调消费
 ```
 
-- **双入口**：设置页（美术）与 `tg.*` CVar（技术/PIE 实时）并存，CVar 负值=不覆盖
+- **三入口**：设置页 / Window→TrueGlow 面板（美术）、`tg.*` CVar（技术/PIE 实时）、
+  `UTrueGlowBlueprintLibrary` 静态函数（运行时动态驱动：过场、游戏状态、昼夜），CVar 负值=不覆盖
 - **预设机制**：设置页改 Preset 枚举 → `PostEditChangeProperty` 整套覆盖参数并 SaveConfig；
   手动改任何单项自动回落 Custom（保留用户值）
 - 为什么 settings 是普通 `UCLASS(config)` 而不是 `UDeveloperSettings` 子类：见 §9 坑5
@@ -220,11 +228,11 @@ FKuroGlowParams（POD 快照，游戏线程每帧 BeginRenderViewFamily 刷新�
 | `TrueGlowCommon.ush` | （函数库） | — | `SoftThreshold`、`Tent9` |
 | `TrueGlowBrightDownsample.usf` | MainPS | 4 | Threshold/Knee/Tint₀/InputUVScaleBias |
 | `TrueGlowDownsample.usf` | MainPS | 4 | Tintᵢ/InputUVScaleBias |
-| `TrueGlowBlurGaussian.usf` | MainPS | 2R+1 (R≤6) | Direction(1,0)/(0,1)、Sigma |
+| `TrueGlowBlurGaussian.usf` | MainPS | 2R+1 (R≤6) | Direction(1,0)/(0,1)、Sigma、DirectionalScale(X/Y) |
 | `TrueGlowTentUpsampleAdd.usf` | MainPS | 9+1 | 双输入(Low/High)、Weight |
 | `TrueGlowStreak.usf` | MainPS | 2T+1 (T=12) | Direction/StepPixels/Attenuation |
 | `TrueGlowGlare.usf` | MainPS | Dirs·Taps·2 (≤192) | Radius1/2/TapsPerDirection/DirectionCount |
-| `TrueGlowComposite.usf` | MainPS | 4 | Scene 视口变换 + 三通道 Tint×Intensity |
+| `TrueGlowComposite.usf` | MainPS | 5 | Scene 视口变换 + Bloom + 双 Streak(横/纵) + Glare 各带 Tint×Intensity |
 
 C++ 侧声明集中在 `Source/TrueGlowShaders/Private/TrueGlowShaders.h`（单 TU include，
 `IMPLEMENT_GLOBAL_SHADER` 要求）。usf 的 include 一律用**虚拟绝对路径**
@@ -242,7 +250,8 @@ C++ 侧声明集中在 `Source/TrueGlowShaders/Private/TrueGlowShaders.h`（单 
 | 高斯 H/V ×6 级 | ½→1/64 | ~33% | ≤13 |
 | Tent 合并 ×5 | ½→1/32 | ~30% | 10 |
 | Quarter 降采样 | ¼ | 25% | 4 |
-| Streak ×5 | ¼ | 125% | 25 |
+| Streak 横向 ×5 | ¼ | 125% | 25 |
+| Streak 纵向组（可选） | ¼ | +125% | 25 |
 | Glare | ¼ | 25% | 48 |
 | Composite | 全 | 100% | 4 |
 
