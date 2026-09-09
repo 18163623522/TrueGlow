@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowBlueprintLibrary.h"
 
@@ -31,6 +31,8 @@ void UTrueGlowBlueprintLibrary::SetStreakEnabled(bool bInEnabled) { S()->bStreak
 void UTrueGlowBlueprintLibrary::SetStreakIntensity(float InIntensity) { S()->StreakIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetStreakLength(float InLengthPx) { S()->StreakLength = FMath::Clamp(InLengthPx, 16.0f, 2048.0f); }
 void UTrueGlowBlueprintLibrary::SetStreakTint(FLinearColor InTint) { S()->StreakTint = InTint; }
+void UTrueGlowBlueprintLibrary::SetStreakOwnThreshold(bool bInEnabled) { S()->bStreakOwnThreshold = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetStreakThreshold(float InThreshold) { S()->StreakThreshold = FMath::Max(0.0f, InThreshold); }
 
 void UTrueGlowBlueprintLibrary::SetVerticalStreakEnabled(bool bInEnabled) { S()->bStreakVerticalEnabled = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetVerticalStreakIntensity(float InIntensity) { S()->StreakVerticalIntensity = FMath::Max(0.0f, InIntensity); }

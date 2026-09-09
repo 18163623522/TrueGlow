@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #pragma once
 
@@ -42,6 +42,8 @@ struct FTrueGlowParams
 	float StreakThickness = 2.0f;     // 垂直粗细（像素）
 	float StreakAttenuation = 0.35f;  // 衰减率，越大光条越收
 	int32 StreakPasses = 4;           // 1..8 迭代次数
+	bool bStreakOwnThreshold = false; // 光条独立阈值（默认关 = 与 bloom 共用，保持现有观感）
+	float StreakThreshold = 2.0f;     // 独立阈值亮度
 
 	// 纵向 streak（灯管上下漏光，REAL BLOOM 的 vertical streak；衰减/tint/次数与横向共用）
 	bool bStreakVerticalEnabled = false;

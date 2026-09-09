@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowSettings.h"
 #include "TrueGlowBlueprintLibrary.h"

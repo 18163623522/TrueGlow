@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowSettings.h"
 
@@ -33,6 +33,8 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.StreakThickness = 2.0f;
 	S.StreakAttenuation = 0.35f;
 	S.StreakPasses = 4;
+	S.bStreakOwnThreshold = false;
+	S.StreakThreshold = 2.0f;
 	S.bStreakVerticalEnabled = false;
 	S.StreakVerticalIntensity = 0.25f;
 	S.StreakVerticalLength = 240.0f;

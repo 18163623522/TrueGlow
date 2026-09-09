@@ -45,8 +45,14 @@
 
 编辑器视口需开 **Realtime** 实时渲染即可见；PIE 与打包游戏同样生效。
 
-**Bloom 细节控制**（对标 REAL BLOOM）：`BloomBrightMultiplier`（过阈值能量增益）、
-`BloomScale X/Y`（高斯核各向异性缩放，做椭圆/竖向光雾）、`bBloomFastMode`（跳过每级模糊保帧率）。
+**Bloom 细节控制**（对标 REAL BLOOM）：`亮部增益`（过阈值能量增益）、`模糊核缩放 XY`
+（各向异性，做椭圆/竖向光雾）、`快速模式`（跳过每级模糊保帧率）。
+
+**光条进阶**：`启用独立阈值`（光条只抓最亮的灯，不与泛光阈值共用——霓虹场景利器）；
+颜色采用**保亮度染色**（白色=保留源色，彩色只改色相不改能量，星芒同）。
+`stat gpu` 里四组命名统计（Bloom/Streak/Glare/Composite）可直接看各通道耗时。
+
+**全中文界面**：面板内全部参数与分类均中文显示。
 
 **蓝图驱动**：`UTrueGlowBlueprintLibrary`（SetEnabled / SetBloomIntensity / SetStreakLength /
 ApplyPreset / SetupEngineBloomOffVolume / SaveSettings 等静态函数），过场、游戏状态、

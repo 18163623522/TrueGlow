@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowShaderBridge.h"
 #include "TrueGlowCVars.h"

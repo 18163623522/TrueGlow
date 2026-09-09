@@ -191,8 +191,13 @@ x ≥ T+K : x - T
 **⑥ Glare**：每方向两圈采样（半径 r₁ 短/r₂ 长），`t = k/Taps ∈ (0,1]`，
 权重 `(1-t)²`；4 方向步进 45°，6 方向步进 30°；按 `(Dirs·Taps·2)` 归一。
 
-**⑦ 合成**：线性 HDR 域直接加法（tonemap 前的正确位置），
-三个通道各自带 Tint×Intensity 预乘的 float4，禁用通道乘 0 并指向 4×4 黑色占位纹理。
+**⑦ 合成**：线性 HDR 域直接加法（tonemap 前的正确位置）。Bloom 通道带预乘权重 float4；
+Streak×2 / Glare 通道采用**保亮度染色**（借鉴 RealBloom）：白色 tint=保留源色 × 强度，非白按
+`length(Tint-1)/√3` 程度 lerp 向 `Tint×源亮度` ——只改色相不改能量。禁用通道强度置 0 并指向
+4×4 黑色占位纹理。**光条独立阈值**（可选）：开启后 streak 用专属 SceneColor→½阈值→¼ 链路，
+不与 bloom 阈值共用（RealBloom 的 StreakThreshold 同款能力）。**GPU 统计**：
+DECLARE_GPU_STAT_NAMED + RDG_GPU_STAT_SCOPE 四组（Bloom/Streak/Glare/Composite），
+`stat gpu` 聚合显示。
 
 ### 分辨率与屏幕百分比
 

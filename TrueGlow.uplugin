@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "0.1.0",
-	"FriendlyName": "TrueGlow",
+	"FriendlyName": "TrueGlow 物理辉光",
 	"Description": "HDR physically-inspired post-process glow: pyramid bloom + anamorphic streaks + lens glare, injected before tonemap via SceneViewExtension (UE 4.26, no engine modification).",
 	"Category": "Rendering",
 	"CreatedBy": "pengxiwei",

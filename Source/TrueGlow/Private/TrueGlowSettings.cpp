@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowSettings.h"
 #include "TrueGlowCVars.h"
@@ -48,6 +48,8 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.StreakThickness = FMath::Clamp(StreakThickness, 1.0f, 16.0f);
 	P.StreakAttenuation = FMath::Clamp(StreakAttenuation, 0.05f, 1.0f);
 	P.StreakPasses = FMath::Clamp(StreakPasses, 1, 8);
+	P.bStreakOwnThreshold = bStreakOwnThreshold;
+	P.StreakThreshold = FMath::Max(0.0f, StreakThreshold);
 	const float StreakIntensityO = TrueGlowCVars::StreakIntensityOverride();
 	const float StreakLengthO = TrueGlowCVars::StreakLengthOverride();
 	if (StreakIntensityO >= 0.0f) { P.StreakIntensity = StreakIntensityO; }

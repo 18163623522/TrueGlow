@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #pragma once
 
@@ -38,6 +38,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakLength(float InLengthPx);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakTint(FLinearColor InTint);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakOwnThreshold(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakThreshold(float InThreshold);
 
 	// ---------------- Streak（纵向） ----------------
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetVerticalStreakEnabled(bool bInEnabled);

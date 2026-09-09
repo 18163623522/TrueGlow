@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowViewExtension.h"
 #include "TrueGlowShaders.h"
@@ -13,6 +13,13 @@
 #include "RHI.h"
 #include "RHIStaticStates.h"
 #include "Shader.h"
+#include "GPUProfiler.h"
+
+// stat gpu 里的命名分组（RealBloom 同款做法）
+DECLARE_GPU_STAT_NAMED(TrueGlowBloom, TEXT("TrueGlow.Bloom"));
+DECLARE_GPU_STAT_NAMED(TrueGlowStreak, TEXT("TrueGlow.Streak"));
+DECLARE_GPU_STAT_NAMED(TrueGlowGlare, TEXT("TrueGlow.Glare"));
+DECLARE_GPU_STAT_NAMED(TrueGlowComposite, TEXT("TrueGlow.Composite"));
 
 namespace
 {
@@ -30,9 +37,9 @@ namespace
 
 	FVector4 ToWeight4(float W) { return FVector4(W, W, W, 0.0f); }
 
-	FVector4 ToMul4(const FLinearColor& Tint, float Intensity)
+	FVector4 ToTint4(const FLinearColor& Tint)
 	{
-		return FVector4(Tint.R * Intensity, Tint.G * Intensity, Tint.B * Intensity, 0.0f);
+		return FVector4(FMath::Clamp(Tint.R, 0.0f, 8.0f), FMath::Clamp(Tint.G, 0.0f, 8.0f), FMath::Clamp(Tint.B, 0.0f, 8.0f), 1.0f);
 	}
 
 	FIntPoint Halve(FIntPoint InSize)
@@ -131,7 +138,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	const FScreenPassTextureViewportParameters SceneParams =
 		GetScreenPassTextureViewportParameters(FScreenPassTextureViewport(SceneColor));
 
-	const bool bNeedBright = P.bBloomEnabled || P.bStreakEnabled || P.bGlareEnabled;
+	const bool bNeedBright = P.bBloomEnabled || P.bStreakEnabled || P.bStreakVerticalEnabled || P.bGlareEnabled;
 
 	RDG_EVENT_SCOPE(GraphBuilder, "TrueGlow");
 
@@ -139,15 +146,14 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	FRDGTextureRef BlackDummy = CreateGlowTexture(GraphBuilder, FIntPoint(4, 4), TEXT("TrueGlow.Black"));
 
 	// ------------------------------------------------------------------
-	// 0) BrightPass：软阈值 + 4-tap 降到 1/2
-	FRDGTextureRef BrightHalf = BlackDummy;
-	if (bNeedBright)
+	// 0) BrightPass：软阈值 + 4-tap 降到 1/2（bloom 链用；streak 独立阈值时再跑一次）
+	auto AddBrightHalfPass = [&](float Threshold, float Knee, const FVector4& Tint, const TCHAR* Name) -> FRDGTextureRef
 	{
 		const FScreenPassTextureViewportParameters HalfParams = GetExactViewportParams(HalfSize);
 		const FScreenPassTextureViewportTransform Transform =
 			GetScreenPassTextureViewportTransform(SceneParams, HalfParams);
 
-		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, HalfSize, TEXT("TrueGlow.BrightHalf"));
+		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, HalfSize, Name);
 
 		FTrueGlowBrightDownsamplePS::FParameters* Prm =
 			GraphBuilder.AllocParameters<FTrueGlowBrightDownsamplePS::FParameters>();
@@ -156,22 +162,29 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->InputUVScaleBias = FVector4(Transform.Scale.X, Transform.Scale.Y, Transform.Bias.X, Transform.Bias.Y);
 		Prm->InputTexture = SceneColor.Texture;
 		Prm->InputSampler = BilinearClampSampler;
-		Prm->Threshold = P.BloomThreshold;
-		Prm->Knee = P.BloomKnee;
-		Prm->Tint = FVector4(
-			P.BloomLevelTints[0].R * P.BloomBrightMultiplier,
-			P.BloomLevelTints[0].G * P.BloomBrightMultiplier,
-			P.BloomLevelTints[0].B * P.BloomBrightMultiplier,
-			1.0f);
+		Prm->Threshold = Threshold;
+		Prm->Knee = Knee;
+		Prm->Tint = Tint;
 		Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
 
 		TShaderMapRef<FTrueGlowBrightDownsamplePS> Shader(ShaderMap);
 		FPixelShaderUtils::AddFullscreenPass(
 			GraphBuilder, ShaderMap,
-			RDG_EVENT_NAME("TrueGlow.BrightPass %dx%d", HalfSize.X, HalfSize.Y),
+			RDG_EVENT_NAME("TrueGlow.%s %dx%d", Name, HalfSize.X, HalfSize.Y),
 			Shader, Prm, FIntRect(FIntPoint::ZeroValue, HalfSize));
+		return Target;
+	};
 
-		BrightHalf = Target;
+	FRDGTextureRef BrightHalf = BlackDummy;
+	if (bNeedBright)
+	{
+		BrightHalf = AddBrightHalfPass(P.BloomThreshold, P.BloomKnee,
+			FVector4(
+				P.BloomLevelTints[0].R * P.BloomBrightMultiplier,
+				P.BloomLevelTints[0].G * P.BloomBrightMultiplier,
+				P.BloomLevelTints[0].B * P.BloomBrightMultiplier,
+				1.0f),
+			TEXT("BrightHalf"));
 	}
 
 	// 通用降采样 lambda（作用于我们自己的等尺寸纹理，UV 变换恒等）
@@ -194,19 +207,35 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	};
 
 	// ------------------------------------------------------------------
-	// 1) 1/4 亮部基底（streak / glare 共用）
+	// 1) 1/4 亮部基底：glare 与默认 streak 用 bloom 阈值版；独立阈值时 streak 走专属链
+	const bool bStreakFamily = P.bStreakEnabled || P.bStreakVerticalEnabled;
 	FRDGTextureRef QuarterBase = nullptr;
-	if (P.bStreakEnabled || P.bStreakVerticalEnabled || P.bGlareEnabled)
+	FRDGTextureRef StreakQuarterBase = nullptr;
+	if (bStreakFamily || P.bGlareEnabled)
 	{
-		QuarterBase = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.QuarterBase"));
-		AddDownsamplePass(BrightHalf, HalfSize, QuarterBase, QuarterSize, FVector4(1, 1, 1, 1), TEXT("Quarter"));
+		if (P.bGlareEnabled || !P.bStreakOwnThreshold)
+		{
+			QuarterBase = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.QuarterBase"));
+			AddDownsamplePass(BrightHalf, HalfSize, QuarterBase, QuarterSize, FVector4(1, 1, 1, 1), TEXT("Quarter"));
+		}
+
+		if (bStreakFamily && P.bStreakOwnThreshold)
+		{
+			// 独立阈值链：SceneColor → 阈值亮部(½) → ¼（RealBloom 同款独立阈值能力）
+			FRDGTextureRef StreakBrightHalf = AddBrightHalfPass(P.StreakThreshold, P.BloomKnee,
+				FVector4(1, 1, 1, 1), TEXT("StreakBrightHalf"));
+			StreakQuarterBase = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.StreakQuarterBase"));
+			AddDownsamplePass(StreakBrightHalf, HalfSize, StreakQuarterBase, QuarterSize, FVector4(1, 1, 1, 1), TEXT("StreakQuarter"));
+		}
 	}
+	FRDGTextureRef StreakBase = StreakQuarterBase ? StreakQuarterBase : QuarterBase;
 
 	// ------------------------------------------------------------------
 	// 2) Bloom 金字塔：降采样链 + 每级高斯 + tent 升采样合并
 	FRDGTextureRef BloomResult = BlackDummy;
 	if (P.bBloomEnabled)
 	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowBloom);
 		const int32 LevelCount = FMath::Clamp(P.BloomLevels, 1, 6);
 
 		TArray<FRDGTextureRef, TInlineAllocator<6>> LevelTextures;
@@ -298,8 +327,9 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	// 3) Streak：横向衰减模糊迭代 + 一次纵向加粗；可选独立纵向光条组
 	FRDGTextureRef StreakResult = BlackDummy;
 	FRDGTextureRef StreakResultV = BlackDummy;
-	if ((P.bStreakEnabled || P.bStreakVerticalEnabled) && QuarterBase)
+	if ((P.bStreakEnabled || P.bStreakVerticalEnabled) && StreakBase)
 	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowStreak);
 		const float HeightScale = static_cast<float>(QuarterSize.Y) / 1080.0f;
 		const int32 StreakTaps = 12;
 		const int32 Passes = FMath::Clamp(P.StreakPasses, 1, 8);
@@ -328,7 +358,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		{
 			const float StepPixels = FMath::Max(1.0f, P.StreakLength * HeightScale / (Passes * StreakTaps));
 
-			FRDGTextureRef Current = QuarterBase;
+			FRDGTextureRef Current = StreakBase;
 			for (int32 i = 0; i < Passes; ++i)
 			{
 				FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize,
@@ -350,7 +380,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		{
 			const float StepPixelsV = FMath::Max(1.0f, P.StreakVerticalLength * HeightScale / (Passes * StreakTaps));
 
-			FRDGTextureRef Current = QuarterBase;
+			FRDGTextureRef Current = StreakBase;
 			for (int32 i = 0; i < Passes; ++i)
 			{
 				FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize,
@@ -373,6 +403,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	FRDGTextureRef GlareResult = BlackDummy;
 	if (P.bGlareEnabled && QuarterBase)
 	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowGlare);
 		const float HeightScale = static_cast<float>(QuarterSize.Y) / 1080.0f;
 		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.Glare"));
 
@@ -399,6 +430,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	// 5) 全分辨率合成（输出纹理与视图等尺寸，ViewRect 重定为全幅）
 	FRDGTextureRef OutTexture = CreateGlowTexture(GraphBuilder, FullSize, TEXT("TrueGlow.SceneColorOut"));
 	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowComposite);
 		const FScreenPassTextureViewportParameters OutParams = GetExactViewportParams(FullSize);
 		const FScreenPassTextureViewportTransform Transform =
 			GetScreenPassTextureViewportTransform(SceneParams, OutParams);
@@ -416,19 +448,16 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 			: FVector4(0, 0, 0, 0);
 		Prm->StreakTexture = StreakResult;
 		Prm->StreakSampler = BilinearClampSampler;
-		Prm->StreakMul = P.bStreakEnabled
-			? ToMul4(P.StreakTint, FMath::Max(0.0f, P.StreakIntensity))
-			: FVector4(0, 0, 0, 0);
+		Prm->StreakTint = ToTint4(P.StreakTint);
+		Prm->StreakIntensity = P.bStreakEnabled ? FMath::Max(0.0f, P.StreakIntensity) : 0.0f;
 		Prm->StreakTexture2 = StreakResultV;
 		Prm->Streak2Sampler = BilinearClampSampler;
-		Prm->Streak2Mul = P.bStreakVerticalEnabled
-			? ToMul4(P.StreakTint, FMath::Max(0.0f, P.StreakVerticalIntensity))
-			: FVector4(0, 0, 0, 0);
+		Prm->Streak2Tint = ToTint4(P.StreakTint);
+		Prm->Streak2Intensity = P.bStreakVerticalEnabled ? FMath::Max(0.0f, P.StreakVerticalIntensity) : 0.0f;
 		Prm->GlareTexture = GlareResult;
 		Prm->GlareSampler = BilinearClampSampler;
-		Prm->GlareMul = P.bGlareEnabled
-			? ToMul4(P.GlareTint, FMath::Max(0.0f, P.GlareIntensity))
-			: FVector4(0, 0, 0, 0);
+		Prm->GlareTint = ToTint4(P.GlareTint);
+		Prm->GlareIntensity = P.bGlareEnabled ? FMath::Max(0.0f, P.GlareIntensity) : 0.0f;
 		Prm->RenderTargets[0] = FRenderTargetBinding(OutTexture, ERenderTargetLoadAction::ENoAction);
 
 		TShaderMapRef<FTrueGlowCompositePS> Shader(ShaderMap);

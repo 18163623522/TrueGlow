@@ -4,6 +4,7 @@
 
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/ScreenPass.ush"
+#include "/Plugin/TrueGlow/Private/TrueGlowCommon.ush"
 
 Texture2D SceneTexture;
 SamplerState SceneSampler;
@@ -19,15 +20,18 @@ float4 BloomMul;
 
 Texture2D StreakTexture;
 SamplerState StreakSampler;
-float4 StreakMul;
+float4 StreakTint;
+float StreakIntensity;
 
 Texture2D StreakTexture2;
 SamplerState Streak2Sampler;
-float4 Streak2Mul;
+float4 Streak2Tint;
+float Streak2Intensity;
 
 Texture2D GlareTexture;
 SamplerState GlareSampler;
-float4 GlareMul;
+float4 GlareTint;
+float GlareIntensity;
 
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
@@ -41,9 +45,9 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 
 	float3 Glow =
 		  Texture2DSampleLevel(BloomTexture,  BloomSampler,  UV, 0).rgb * BloomMul.rgb
-		+ Texture2DSampleLevel(StreakTexture, StreakSampler, UV, 0).rgb * StreakMul.rgb
-		+ Texture2DSampleLevel(StreakTexture2, Streak2Sampler, UV, 0).rgb * Streak2Mul.rgb
-		+ Texture2DSampleLevel(GlareTexture,  GlareSampler,  UV, 0).rgb * GlareMul.rgb;
+		+ TrueGlowApplyTint(Texture2DSampleLevel(StreakTexture,  StreakSampler,  UV, 0).rgb, StreakTint.rgb,  StreakIntensity)
+		+ TrueGlowApplyTint(Texture2DSampleLevel(StreakTexture2, Streak2Sampler, UV, 0).rgb, Streak2Tint.rgb, Streak2Intensity)
+		+ TrueGlowApplyTint(Texture2DSampleLevel(GlareTexture,   GlareSampler,   UV, 0).rgb, GlareTint.rgb,   GlareIntensity);
 
 	OutColor = float4(Scene.rgb + Glow, Scene.a);
 }

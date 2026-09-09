@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowSettings.h"
 #include "TrueGlowBlueprintLibrary.h"
@@ -139,7 +139,7 @@ public:
 		// Window → TrueGlow 面板（唯一入口）
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner("TrueGlowWindow",
 			FOnSpawnTab::CreateStatic(&SpawnTrueGlowTab))
-			.SetDisplayName(LOCTEXT("TabTitle", "TrueGlow"))
+			.SetDisplayName(LOCTEXT("TabTitle", "TrueGlow 物理辉光"))
 			.SetTooltipText(LOCTEXT("TabTooltip", "TrueGlow 物理辉光参数面板"))
 			.SetMenuType(ETabSpawnerMenuType::Enabled);
 

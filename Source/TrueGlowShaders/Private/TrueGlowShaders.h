@@ -1,4 +1,4 @@
-// Copyright pengxiwei. All Rights Reserved.
+﻿// Copyright pengxiwei. All Rights Reserved.
 
 // TrueGlow 的 7 个全局像素着色器声明。
 // 仅被 TrueGlowViewExtension.cpp include 一次（IMPLEMENT_GLOBAL_SHADER 要求单翻译单元）。
@@ -186,13 +186,16 @@ public:
 		SHADER_PARAMETER(FVector4, BloomMul)
 		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakTexture)
 		SHADER_PARAMETER_SAMPLER(SamplerState, StreakSampler)
-		SHADER_PARAMETER(FVector4, StreakMul)
+		SHADER_PARAMETER(FVector4, StreakTint)
+		SHADER_PARAMETER(float, StreakIntensity)
 		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakTexture2)
 		SHADER_PARAMETER_SAMPLER(SamplerState, Streak2Sampler)
-		SHADER_PARAMETER(FVector4, Streak2Mul)
+		SHADER_PARAMETER(FVector4, Streak2Tint)
+		SHADER_PARAMETER(float, Streak2Intensity)
 		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, GlareTexture)
 		SHADER_PARAMETER_SAMPLER(SamplerState, GlareSampler)
-		SHADER_PARAMETER(FVector4, GlareMul)
+		SHADER_PARAMETER(FVector4, GlareTint)
+		SHADER_PARAMETER(float, GlareIntensity)
 		RENDER_TARGET_BINDING_SLOTS()
 	END_SHADER_PARAMETER_STRUCT()
 
