@@ -16,7 +16,16 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.BloomKnee = FMath::Clamp(BloomKnee, 0.0f, 1.0f);
 	P.BloomBrightMultiplier = FMath::Clamp(BloomBrightMultiplier, 0.0f, 8.0f);
 	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 6);
-	P.BloomBlurRadius = FMath::Clamp(BloomBlurRadius, 0.0f, 6.0f);
+	P.BloomBlurRadius = FMath::Clamp(BloomBlurRadius, 0.0f, 8.0f);
+	P.GaussianIterations = FMath::Clamp(GaussianIterations, 1, 2);
+	P.ChromaticDispersion = FMath::Clamp(ChromaticDispersion, 0.0f, 1.0f);
+	P.bLensDirt = bLensDirt;
+	P.LensDirtIntensity = FMath::Clamp(LensDirtIntensity, 0.0f, 3.0f);
+	P.FilmSoftIntensity = FMath::Clamp(FilmSoftIntensity, 0.0f, 2.0f);
+	P.FilmSoftRadius = FMath::Clamp(FilmSoftRadius, 1.0f, 8.0f);
+	P.DualTintStrength = FMath::Clamp(DualTintStrength, 0.0f, 1.0f);
+	P.WarmCoreColor = WarmCoreColor;
+	P.CoolFringeColor = CoolFringeColor;
 	P.bBloomFastMode = bBloomFastMode;
 	P.BloomScale = FVector2D(
 		FMath::Clamp(BloomScale.X, 0.1f, 4.0f),
@@ -45,7 +54,10 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.StreakIntensity = FMath::Max(0.0f, StreakIntensity);
 	P.StreakTint = StreakTint;
 	P.StreakLength = FMath::Clamp(StreakLength, 16.0f, 2048.0f);
-	P.StreakThickness = FMath::Clamp(StreakThickness, 1.0f, 16.0f);
+	P.StreakThickness = FMath::Clamp(StreakThickness, 0.25f, 16.0f);
+	P.bStreakDualLine = bStreakDualLine;
+	P.StreakDualLineSeparation = FMath::Clamp(StreakDualLineSeparation, 2.0f, 64.0f);
+	P.StreakDualLineIntensity = FMath::Clamp(StreakDualLineIntensity, 0.0f, 1.0f);
 	P.StreakAttenuation = FMath::Clamp(StreakAttenuation, 0.05f, 1.0f);
 	P.StreakPasses = FMath::Clamp(StreakPasses, 1, 8);
 	P.bStreakOwnThreshold = bStreakOwnThreshold;

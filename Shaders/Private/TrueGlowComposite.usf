@@ -17,6 +17,17 @@ float4 SceneUVScaleBias;
 Texture2D BloomTexture;
 SamplerState BloomSampler;
 float4 BloomMul;
+float2 StreakDualLineSepUV; // 双线横光 UV 间距（0=关）
+float StreakDualLineIntensity;
+
+// 电影质感 Cinematic
+float BloomDispersion;      // 镜头色散 0=关（径向 RGB 分离，彩虹边）
+float FilmSoftIntensity;    // 电影柔光层强度（0=关）
+float FilmSoftRadius;       // 柔光半径
+float DualTintStrength;     // 双色温渐染强度（0=关）
+float4 WarmCoreColor;       // 暖芯色
+float4 CoolFringeColor;     // 冷晕色
+float LensDirtIntensity;    // 脏镜头强度（0=关）
 
 Texture2D StreakTexture;
 SamplerState StreakSampler;
@@ -43,11 +54,51 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 
 	float4 Scene = Texture2DSampleLevel(SceneTexture, SceneSampler, SceneUV, 0);
 
+	// ---- 镜头色散：红向外、蓝向内（径向彩虹边）----
+	float2 CA = (UV - 0.5) * BloomDispersion * 0.03;
+	float3 BloomColor = float3(
+		Texture2DSampleLevel(BloomTexture, BloomSampler, UV + CA, 0).r,
+		Texture2DSampleLevel(BloomTexture, BloomSampler, UV,      0).g,
+		Texture2DSampleLevel(BloomTexture, BloomSampler, UV - CA, 0).b);
+
+	// ---- 电影柔光层：宽半径 4-tap poisson 低频清洗 ----
+	if (FilmSoftIntensity > 0.001)
+	{
+		float R = FilmSoftRadius * 0.006;
+		float3 Soft =
+			  Texture2DSampleLevel(BloomTexture, BloomSampler, UV + float2( 0.8, -0.6) * R, 0).rgb
+			+ Texture2DSampleLevel(BloomTexture, BloomSampler, UV + float2(-0.8,  0.6) * R, 0).rgb
+			+ Texture2DSampleLevel(BloomTexture, BloomSampler, UV + float2( 0.6,  0.8) * R, 0).rgb
+			+ Texture2DSampleLevel(BloomTexture, BloomSampler, UV + float2(-0.6, -0.8) * R, 0).rgb;
+		BloomColor += Soft * (0.25 * FilmSoftIntensity);
+	}
+
+	// ---- 双色温渐染：亮芯偏暖、外晕偏冷（胶片色温分离）----
+	if (DualTintStrength > 0.001)
+	{
+		float BL = saturate(dot(BloomColor, float3(0.299, 0.587, 0.114)) * 1.5);
+		float3 DualCol = lerp(BloomColor * CoolFringeColor.rgb, BloomColor * WarmCoreColor.rgb, BL);
+		BloomColor = lerp(BloomColor, DualCol, DualTintStrength);
+	}
+
+	// ---- 双线横光：主横光上下各一道平行细光 ----
+	float3 StreakColor =
+		  Texture2DSampleLevel(StreakTexture, StreakSampler, UV, 0).rgb
+		+ (Texture2DSampleLevel(StreakTexture, StreakSampler, UV + StreakDualLineSepUV, 0).rgb
+		 + Texture2DSampleLevel(StreakTexture, StreakSampler, UV - StreakDualLineSepUV, 0).rgb) * StreakDualLineIntensity;
+
 	float3 Glow =
-		  Texture2DSampleLevel(BloomTexture,  BloomSampler,  UV, 0).rgb * BloomMul.rgb
-		+ TrueGlowApplyTint(Texture2DSampleLevel(StreakTexture,  StreakSampler,  UV, 0).rgb, StreakTint.rgb,  StreakIntensity)
+		  BloomColor * BloomMul.rgb
+		+ TrueGlowApplyTint(StreakColor, StreakTint.rgb,  StreakIntensity)
 		+ TrueGlowApplyTint(Texture2DSampleLevel(StreakTexture2, Streak2Sampler, UV, 0).rgb, Streak2Tint.rgb, Streak2Intensity)
 		+ TrueGlowApplyTint(Texture2DSampleLevel(GlareTexture,   GlareSampler,   UV, 0).rgb, GlareTint.rgb,   GlareIntensity);
+
+	// ---- 脏镜头光晕：程序化污渍调制整体辉光 ----
+	if (LensDirtIntensity > 0.001)
+	{
+		float Dirt = TrueGlowProceduralDirt(UV);
+		Glow *= lerp(1.0, 0.25 + Dirt * 2.2, saturate(LensDirtIntensity * 0.5));
+	}
 
 	OutColor = float4(Scene.rgb + Glow, Scene.a);
 }

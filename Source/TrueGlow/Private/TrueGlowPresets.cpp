@@ -5,6 +5,13 @@
 namespace TrueGlowPresets
 {
 
+static void DualTintDefaults(UTrueGlowSettings& S)
+{
+	S.DualTintStrength = 0.0f;
+	S.WarmCoreColor = FLinearColor(1.00f, 0.95f, 0.85f, 1.0f);
+	S.CoolFringeColor = FLinearColor(0.80f, 0.90f, 1.15f, 1.0f);
+}
+
 void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 {
 	// 公共默认（鸣潮基线）
@@ -14,8 +21,18 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.BloomKnee = 0.6f;
 	S.BloomBrightMultiplier = 1.0f;
 	S.BloomLevels = 6;
-	S.BloomBlurRadius = 2.0f;
+	S.BloomBlurRadius = 3.0f;
+	S.GaussianIterations = 2;
 	S.bBloomFastMode = false;
+	S.ChromaticDispersion = 0.18f;
+	S.bLensDirt = false;
+	S.LensDirtIntensity = 1.0f;
+	S.FilmSoftIntensity = 0.0f;
+	S.FilmSoftRadius = 3.0f;
+	DualTintDefaults(S);
+	S.bStreakDualLine = false;
+	S.StreakDualLineSeparation = 12.0f;
+	S.StreakDualLineIntensity = 0.5f;
 	S.BloomScale = FVector2D(1.0f, 1.0f);
 
 	S.BloomLevelWeights = { 0.60f, 0.70f, 0.80f, 0.95f, 1.10f, 1.25f };
@@ -50,6 +67,9 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	{
 	case ETrueGlowPreset::WuWa:
 		S.BloomIntensity = 1.00f;
+		S.ChromaticDispersion = 0.18f;
+		S.FilmSoftIntensity = 0.35f;
+		S.DualTintStrength = 0.35f;
 		S.StreakIntensity = 0.35f;
 		S.StreakLength = 480.0f;
 		S.GlareIntensity = 0.25f;
@@ -66,12 +86,23 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 		S.bStreakVerticalEnabled = true;   // 灯管上下漏光
 		S.StreakVerticalIntensity = 0.40f;
 		S.StreakVerticalLength = 300.0f;
+		S.ChromaticDispersion = 0.30f;
+		S.bLensDirt = true;               // 脏镜头
+		S.LensDirtIntensity = 0.8f;
+		S.FilmSoftIntensity = 0.50f;
+		S.DualTintStrength = 0.45f;
+		S.bStreakDualLine = true;         // 双线横光
+		S.StreakDualLineIntensity = 0.45f;
+		S.StreakDualLineSeparation = 16.0f;
 		S.GlareIntensity = 0.35f;
 		S.GlareTint = FLinearColor(0.85f, 0.95f, 1.00f, 1.0f);
 		break;
 
 	case ETrueGlowPreset::Subtle:
 		S.BloomIntensity = 0.60f;
+		S.ChromaticDispersion = 0.08f;
+		S.FilmSoftIntensity = 0.20f;
+		S.DualTintStrength = 0.15f;
 		S.BloomBlurRadius = 1.0f;
 		S.StreakIntensity = 0.12f;
 		S.StreakLength = 240.0f;

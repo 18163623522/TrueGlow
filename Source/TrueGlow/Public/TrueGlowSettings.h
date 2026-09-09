@@ -67,8 +67,37 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "金字塔层数 Levels", ToolTip = "1-6 级，越多光晕越宽", ClampMin = "1", ClampMax = "6", ClampType = "int"))
 	int32 BloomLevels = 6;
 
-	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "每级模糊半径 BlurRadius", ToolTip = "每级高斯模糊半径（像素），0 = 关", ClampMin = "0", ClampMax = "6"))
-	float BloomBlurRadius = 2.0f;
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "每级模糊半径 BlurRadius", ToolTip = "每级高斯模糊半径（像素），0 = 关", ClampMin = "0", ClampMax = "8"))
+	float BloomBlurRadius = 3.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "高斯柔化迭代 GaussianIterations", ToolTip = "每级 H/V 高斯的迭代数：2 = 更柔更接近真实高斯（帧率敏感时改 1）", ClampMin = "1", ClampMax = "2", ClampType = "int"))
+	int32 GaussianIterations = 2;
+
+	// ---------------- 电影质感 Cinematic ----------------
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "镜头色散 ChromaticDispersion", ToolTip = "辉光径向红蓝分离出彩虹边（镜头折射色散）；0 = 关", ClampMin = "0", ClampMax = "1"))
+	float ChromaticDispersion = 0.18f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "启用脏镜头光晕 LensDirt", ToolTip = "程序化镜头污渍调制整体辉光（横向涂抹感，电影常见的 dirty lens）"))
+	bool bLensDirt = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "脏镜头强度 DirtIntensity", EditCondition = "bLensDirt", ClampMin = "0", ClampMax = "3"))
+	float LensDirtIntensity = 1.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "电影柔光强度 FilmSoftIntensity", ToolTip = "宽半径低频柔光层（胶片/梦境般的能量清洗）；0 = 关", ClampMin = "0", ClampMax = "2"))
+	float FilmSoftIntensity = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "电影柔光半径 FilmSoftRadius", ClampMin = "1", ClampMax = "8"))
+	float FilmSoftRadius = 3.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "双色温渐染强度 DualTintStrength", ToolTip = "胶片感双层色温：亮芯偏暖、外晕偏冷；0 = 关", ClampMin = "0", ClampMax = "1"))
+	float DualTintStrength = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "暖芯色 WarmCoreColor"))
+	FLinearColor WarmCoreColor = FLinearColor(1.00f, 0.95f, 0.85f, 1.0f);
+
+	UPROPERTY(EditAnywhere, Config, Category = "电影质感 Cinematic", meta = (DisplayName = "冷晕色 CoolFringeColor"))
+	FLinearColor CoolFringeColor = FLinearColor(0.80f, 0.90f, 1.15f, 1.0f);
 
 	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "快速模式 FastMode", ToolTip = "跳过每级模糊保帧率（金字塔 tent 合并仍提供基础扩散）"))
 	bool bBloomFastMode = false;
@@ -96,8 +125,17 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "横向长度 StreakLength", ToolTip = "像素（按 1080 高度标定，随视口缩放）", ClampMin = "16", ClampMax = "2048"))
 	float StreakLength = 480.0f;
 
-	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "光条宽度 Thickness", ClampMin = "1", ClampMax = "16"))
+	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "光条宽度 Thickness", ToolTip = "可低至 0.25 的亚像素细线", ClampMin = "0.25", ClampMax = "16"))
 	float StreakThickness = 2.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "启用双线横光 DualLine", ToolTip = "在主横光上下各复制一道平行细光（双线变形镜头光斑）"))
+	bool bStreakDualLine = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "双线间距 DualLineSeparation", EditCondition = "bStreakDualLine", ClampMin = "2", ClampMax = "64"))
+	float StreakDualLineSeparation = 12.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "双线强度 DualLineIntensity", EditCondition = "bStreakDualLine", ClampMin = "0", ClampMax = "1"))
+	float StreakDualLineIntensity = 0.5f;
 
 	UPROPERTY(EditAnywhere, Config, Category = "变形光条 Streak", meta = (DisplayName = "衰减率 Attenuation", ToolTip = "越大光条收得越紧", ClampMin = "0.05", ClampMax = "1"))
 	float StreakAttenuation = 0.35f;

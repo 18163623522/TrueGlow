@@ -33,6 +33,16 @@ void UTrueGlowBlueprintLibrary::SetStreakLength(float InLengthPx) { S()->StreakL
 void UTrueGlowBlueprintLibrary::SetStreakTint(FLinearColor InTint) { S()->StreakTint = InTint; }
 void UTrueGlowBlueprintLibrary::SetStreakOwnThreshold(bool bInEnabled) { S()->bStreakOwnThreshold = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetStreakThreshold(float InThreshold) { S()->StreakThreshold = FMath::Max(0.0f, InThreshold); }
+void UTrueGlowBlueprintLibrary::SetGaussianIterations(int32 InIterations) { S()->GaussianIterations = FMath::Clamp(InIterations, 1, 2); }
+void UTrueGlowBlueprintLibrary::SetChromaticDispersion(float InDispersion) { S()->ChromaticDispersion = FMath::Clamp(InDispersion, 0.0f, 1.0f); }
+void UTrueGlowBlueprintLibrary::SetFilmSoftIntensity(float InIntensity) { S()->FilmSoftIntensity = FMath::Clamp(InIntensity, 0.0f, 2.0f); }
+void UTrueGlowBlueprintLibrary::SetFilmSoftRadius(float InRadius) { S()->FilmSoftRadius = FMath::Clamp(InRadius, 1.0f, 8.0f); }
+void UTrueGlowBlueprintLibrary::SetDualTintStrength(float InStrength) { S()->DualTintStrength = FMath::Clamp(InStrength, 0.0f, 1.0f); }
+void UTrueGlowBlueprintLibrary::SetLensDirtEnabled(bool bInEnabled) { S()->bLensDirt = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetLensDirtIntensity(float InIntensity) { S()->LensDirtIntensity = FMath::Clamp(InIntensity, 0.0f, 3.0f); }
+void UTrueGlowBlueprintLibrary::SetDualLineEnabled(bool bInEnabled) { S()->bStreakDualLine = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetDualLineSeparation(float InPx) { S()->StreakDualLineSeparation = FMath::Clamp(InPx, 2.0f, 64.0f); }
+void UTrueGlowBlueprintLibrary::SetDualLineIntensity(float InIntensity) { S()->StreakDualLineIntensity = FMath::Clamp(InIntensity, 0.0f, 1.0f); }
 
 void UTrueGlowBlueprintLibrary::SetVerticalStreakEnabled(bool bInEnabled) { S()->bStreakVerticalEnabled = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetVerticalStreakIntensity(float InIntensity) { S()->StreakVerticalIntensity = FMath::Max(0.0f, InIntensity); }

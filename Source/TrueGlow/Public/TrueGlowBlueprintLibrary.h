@@ -32,6 +32,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomBrightMultiplier(float InMultiplier);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomFastMode(bool bInFast);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomScale(FVector2D InScale);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetGaussianIterations(int32 InIterations);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetChromaticDispersion(float InDispersion);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetFilmSoftIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetFilmSoftRadius(float InRadius);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetDualTintStrength(float InStrength);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetLensDirtEnabled(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetLensDirtIntensity(float InIntensity);
 
 	// ---------------- Streak（横向） ----------------
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakEnabled(bool bInEnabled);
@@ -40,6 +47,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakTint(FLinearColor InTint);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakOwnThreshold(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetStreakThreshold(float InThreshold);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetDualLineEnabled(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetDualLineSeparation(float InPx);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetDualLineIntensity(float InIntensity);
 
 	// ---------------- Streak（纵向） ----------------
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetVerticalStreakEnabled(bool bInEnabled);

@@ -69,3 +69,32 @@ float4 TrueGlowTent9(Texture2D Tex, SamplerState Samp, float2 UV, float2 Texel)
 	        2.0 * C01 + 4.0 * C11 + 2.0 * C21 +
 	        C02 + 2.0 * C12 + C22) / 16.0;
 }
+
+// ---------------------------------------------------------------------------
+// 程序化镜头污渍（脏镜头光晕用）
+float TrueGlowHash21(float2 P)
+{
+	return frac(sin(dot(P, float2(127.1, 311.7))) * 43758.5453);
+}
+
+float TrueGlowVNoise(float2 P)
+{
+	float2 I = floor(P);
+	float2 F = frac(P);
+	F = F * F * (3.0 - 2.0 * F);
+	float A = TrueGlowHash21(I);
+	float B = TrueGlowHash21(I + float2(1, 0));
+	float C = TrueGlowHash21(I + float2(0, 1));
+	float D = TrueGlowHash21(I + float2(1, 1));
+	return lerp(lerp(A, B, F.x), lerp(C, D, F.x), F.y);
+}
+
+// 横向拉伸的两层噪声 + 中心干净边缘脏（镜头污渍分布特征）
+float TrueGlowProceduralDirt(float2 UV)
+{
+	float2 SM = float2(UV.x * 0.35, UV.y * 0.9);
+	float N = TrueGlowVNoise(SM * 7.0) * 0.65 + TrueGlowVNoise(SM * 23.0 + 37.0) * 0.35;
+	N = pow(saturate(N * 1.5 - 0.38), 2.0);
+	float Vig = smoothstep(0.32, 0.95, length(UV - 0.5));
+	return saturate(N * lerp(0.3, 1.0, Vig));
+}

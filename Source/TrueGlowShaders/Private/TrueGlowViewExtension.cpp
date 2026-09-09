@@ -254,21 +254,23 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 			LevelExtents.Add(Extent);
 		}
 
-		// 每级可分离高斯（H→V 两 pass）；Fast 模式跳过保帧率；X/Y 各向异性缩放
-		const int32 BlurRadius = FMath::Clamp(FMath::RoundToInt(P.BloomBlurRadius), 0, 6);
+		// 每级可分离高斯（H→V×迭代）；Fast 模式跳过保帧率；X/Y 各向异性缩放
+		const int32 BlurRadius = FMath::Clamp(FMath::RoundToInt(P.BloomBlurRadius), 0, 8);
+		const int32 BlurIterations = FMath::Clamp(P.GaussianIterations, 1, 2);
 		if (BlurRadius > 0 && !P.bBloomFastMode)
 		{
-			const float Sigma = FMath::Max(0.5f, BlurRadius * 0.5f);
+			const float Sigma = FMath::Max(0.5f, BlurRadius * 0.75f);
 			for (int32 i = 0; i < LevelCount; ++i)
 			{
 				FRDGTextureRef Current = LevelTextures[i];
 				const FIntPoint Extent = LevelExtents[i];
 
+				for (int32 Iter = 0; Iter < BlurIterations; ++Iter)
 				for (int32 Axis = 0; Axis < 2; ++Axis)
 				{
 					const FVector2D Direction = Axis == 0 ? FVector2D(1, 0) : FVector2D(0, 1);
 					FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, Extent,
-						*FString::Printf(TEXT("TrueGlow.L%d.Blur%c"), i, Axis == 0 ? TEXT('H') : TEXT('V')));
+						*FString::Printf(TEXT("TrueGlow.L%d.Blur%c%d"), i, Axis == 0 ? TEXT('H') : TEXT('V'), Iter));
 
 					FTrueGlowBlurPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowBlurPS::FParameters>();
 					Prm->Input = GetExactViewportParams(Extent);
@@ -368,10 +370,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 				Current = Target;
 			}
 
-			// 纵向加粗（thickness）
+			// 纵向定宽（thickness，可亚像素）
 			FRDGTextureRef Thick = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.StreakThick"));
 			AddStreakPass(Current, Thick, FVector2D(0, 1),
-				FMath::Max(1.0f, P.StreakThickness * HeightScale), 2, 0.5f, TEXT("V"));
+				FMath::Max(0.25f, P.StreakThickness * HeightScale), 2, 0.5f, TEXT("V"));
 			StreakResult = Thick;
 		}
 
@@ -390,10 +392,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 				Current = Target;
 			}
 
-			// 横向收窄（对称于横向组的 thickness）
+			// 横向收窄（对称于横向组的 thickness，可亚像素）
 			FRDGTextureRef Thin = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.StreakVThin"));
 			AddStreakPass(Current, Thin, FVector2D(1, 0),
-				FMath::Max(1.0f, P.StreakThickness * HeightScale), 2, 0.5f, TEXT("Thin"));
+				FMath::Max(0.25f, P.StreakThickness * HeightScale), 2, 0.5f, TEXT("Thin"));
 			StreakResultV = Thin;
 		}
 	}
@@ -446,6 +448,19 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->BloomMul = P.bBloomEnabled
 			? ToWeight4(FMath::Max(0.0f, P.BloomIntensity))
 			: FVector4(0, 0, 0, 0);
+		Prm->StreakDualLineSepUV = (P.bStreakDualLine && P.bStreakEnabled)
+			? FVector2D(0.0f, P.StreakDualLineSeparation / 1080.0f)
+			: FVector2D(0, 0);
+		Prm->StreakDualLineIntensity = (P.bStreakDualLine && P.bStreakEnabled)
+			? FMath::Clamp(P.StreakDualLineIntensity, 0.0f, 1.0f)
+			: 0.0f;
+		Prm->BloomDispersion = P.ChromaticDispersion;
+		Prm->FilmSoftIntensity = P.FilmSoftIntensity;
+		Prm->FilmSoftRadius = P.FilmSoftRadius;
+		Prm->DualTintStrength = P.DualTintStrength;
+		Prm->WarmCoreColor = ToTint4(P.WarmCoreColor);
+		Prm->CoolFringeColor = ToTint4(P.CoolFringeColor);
+		Prm->LensDirtIntensity = P.bLensDirt ? P.LensDirtIntensity : 0.0f;
 		Prm->StreakTexture = StreakResult;
 		Prm->StreakSampler = BilinearClampSampler;
 		Prm->StreakTint = ToTint4(P.StreakTint);
