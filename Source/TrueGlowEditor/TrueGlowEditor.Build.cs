@@ -12,7 +12,16 @@ public class TrueGlowEditor : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"TrueGlow",
+			"TrueGlowShaders",
 			"Settings",
+		});
+
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"Slate",
+			"SlateCore",
+			"InputCore",
+			"PropertyEditor",
 		});
 	}
 }

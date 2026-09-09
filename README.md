@@ -11,7 +11,8 @@
 | 通道 | 视觉 | 核心算法 |
 |---|---|---|
 | **Bloom** | 夜景霓虹/天空高亮整片呼吸感光晕，能量大不糊 | 软膝阈值 bright pass → 6 级金字塔（逐级高斯+染色）→ 9-tap tent 升采样合并 |
-| **Streak** | 技能/武器高光拖出的横向冷蓝光条 | ¼ 分辨率 exp 衰减横向模糊迭代 + 纵向加粗，长度/粗细/衰减/次数可调 |
+| **Streak（横向）** | 技能/武器高光拖出的横向冷蓝光条 | ¼ 分辨率 exp 衰减横向模糊迭代 + 纵向加粗，长度/粗细/衰减/次数可调 |
+| **Streak（纵向）** | 灯管/霓虹上下漏光 | 独立开关与长度/强度的纵向衰减模糊组（衰减/色调/迭代与横向共用） |
 | **Glare** | 点光源的短十字衍射星芒 | 4/6 方向 × 双半径采样，(1-t)² 权重 |
 
 三通道独立开关、独立参数，在 **tonemap 之前的 HDR 线性段**合成（这就是"光追截图式"辉光
@@ -36,13 +37,20 @@
 
 | 操作 | 方式 |
 |---|---|
-| 调参 | **Project Settings → Plugins → TrueGlow 物理辉光**（改完即生效、即存盘） |
+| 调参 | **Window → TrueGlow** 面板窗口（预设按钮 + 全参数实时预览），或 Project Settings → Plugins → TrueGlow 物理辉光 |
 | 预设 | 设置页 Preset 下拉：**鸣潮 WuWa**（默认）/ Neon 赛博 / Subtle 克制；或控制台 `tg.ApplyPreset Neon` |
 | 开关对比 | `tg.Enable 0` / `1`（0 = 完全旁路零开销） |
 | 关引擎 bloom | 控制台 `tg.SetupVolume`（防双重辉光，建议进关卡先跑一次） |
 | 实时微调 | `tg.Bloom.Intensity`、`tg.Bloom.Threshold`、`tg.Bloom.Levels`、`tg.Streak.Intensity`、`tg.Streak.Length`、`tg.Glare.Intensity`（负值=不覆盖设置页） |
 
 编辑器视口需开 **Realtime** 实时渲染即可见；PIE 与打包游戏同样生效。
+
+**Bloom 细节控制**（对标 REAL BLOOM）：`BloomBrightMultiplier`（过阈值能量增益）、
+`BloomScale X/Y`（高斯核各向异性缩放，做椭圆/竖向光雾）、`bBloomFastMode`（跳过每级模糊保帧率）。
+
+**蓝图驱动**：`UTrueGlowBlueprintLibrary`（SetEnabled / SetBloomIntensity / SetStreakLength /
+ApplyPreset / SetupEngineBloomOffVolume / SaveSettings 等静态函数），过场、游戏状态、
+昼夜循环可在运行时动态调辉光，即时生效、不自动写盘。
 
 ## 架构一图流
 
@@ -75,8 +83,8 @@ SceneColor ───────────────────────
 
 ```
 Source/TrueGlowShaders/   # 7 个全局 shader + 视图扩展 + RDG 管线 + CVar
-Source/TrueGlow/          # 设置(UCLASS config) + 三预设 + tg.* 控制台命令
-Source/TrueGlowEditor/    # Project Settings 页注册
+Source/TrueGlow/          # 设置(UCLASS config) + 三预设 + tg.* 命令 + 蓝图函数库
+Source/TrueGlowEditor/    # Project Settings 页注册 + Window→TrueGlow 参数面板窗口
 Shaders/Private/           # 7 个 .usf + 公共函数库 .ush
 docs/TechnicalDoc.md       # 深度技术文档（注入点证据链/三模块约束/pass 数学/七坑清单）
 ```

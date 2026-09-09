@@ -80,6 +80,7 @@ public:
 		SHADER_PARAMETER(FVector2D, Direction)
 		SHADER_PARAMETER(uint32, Radius)
 		SHADER_PARAMETER(float, Sigma)
+		SHADER_PARAMETER(FVector2D, DirectionalScale)
 		RENDER_TARGET_BINDING_SLOTS()
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -186,6 +187,9 @@ public:
 		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakTexture)
 		SHADER_PARAMETER_SAMPLER(SamplerState, StreakSampler)
 		SHADER_PARAMETER(FVector4, StreakMul)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakTexture2)
+		SHADER_PARAMETER_SAMPLER(SamplerState, Streak2Sampler)
+		SHADER_PARAMETER(FVector4, Streak2Mul)
 		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, GlareTexture)
 		SHADER_PARAMETER_SAMPLER(SamplerState, GlareSampler)
 		SHADER_PARAMETER(FVector4, GlareMul)

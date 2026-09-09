@@ -12,8 +12,11 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.bBloomEnabled = true;
 	S.BloomThreshold = 1.0f;
 	S.BloomKnee = 0.6f;
+	S.BloomBrightMultiplier = 1.0f;
 	S.BloomLevels = 6;
 	S.BloomBlurRadius = 2.0f;
+	S.bBloomFastMode = false;
+	S.BloomScale = FVector2D(1.0f, 1.0f);
 
 	S.BloomLevelWeights = { 0.60f, 0.70f, 0.80f, 0.95f, 1.10f, 1.25f };
 	S.BloomLevelTints = {
@@ -30,6 +33,9 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.StreakThickness = 2.0f;
 	S.StreakAttenuation = 0.35f;
 	S.StreakPasses = 4;
+	S.bStreakVerticalEnabled = false;
+	S.StreakVerticalIntensity = 0.25f;
+	S.StreakVerticalLength = 240.0f;
 
 	S.bGlareEnabled = true;
 	S.GlareTint = FLinearColor(1, 1, 1, 1);
@@ -49,11 +55,15 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 
 	case ETrueGlowPreset::Neon:
 		S.BloomIntensity = 1.40f;
+		S.BloomBrightMultiplier = 1.3f;
 		S.StreakIntensity = 0.70f;
 		S.StreakLength = 720.0f;
 		S.StreakTint = FLinearColor(0.35f, 0.60f, 1.00f, 1.0f);
 		S.StreakAttenuation = 0.25f;
 		S.StreakPasses = 6;
+		S.bStreakVerticalEnabled = true;   // 灯管上下漏光
+		S.StreakVerticalIntensity = 0.40f;
+		S.StreakVerticalLength = 300.0f;
 		S.GlareIntensity = 0.35f;
 		S.GlareTint = FLinearColor(0.85f, 0.95f, 1.00f, 1.0f);
 		break;

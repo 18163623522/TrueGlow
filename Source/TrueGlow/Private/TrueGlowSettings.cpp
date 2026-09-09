@@ -14,8 +14,13 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.BloomIntensity = FMath::Max(0.0f, BloomIntensity);
 	P.BloomThreshold = FMath::Max(0.0f, BloomThreshold);
 	P.BloomKnee = FMath::Clamp(BloomKnee, 0.0f, 1.0f);
+	P.BloomBrightMultiplier = FMath::Clamp(BloomBrightMultiplier, 0.0f, 8.0f);
 	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 6);
 	P.BloomBlurRadius = FMath::Clamp(BloomBlurRadius, 0.0f, 6.0f);
+	P.bBloomFastMode = bBloomFastMode;
+	P.BloomScale = FVector2D(
+		FMath::Clamp(BloomScale.X, 0.1f, 4.0f),
+		FMath::Clamp(BloomScale.Y, 0.1f, 4.0f));
 
 	const float BloomIntensityO = TrueGlowCVars::BloomIntensityOverride();
 	const float BloomThresholdO = TrueGlowCVars::BloomThresholdOverride();
@@ -47,6 +52,10 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	const float StreakLengthO = TrueGlowCVars::StreakLengthOverride();
 	if (StreakIntensityO >= 0.0f) { P.StreakIntensity = StreakIntensityO; }
 	if (StreakLengthO >= 0.0f) { P.StreakLength = FMath::Clamp(StreakLengthO, 16.0f, 2048.0f); }
+
+	P.bStreakVerticalEnabled = bStreakVerticalEnabled;
+	P.StreakVerticalIntensity = FMath::Max(0.0f, StreakVerticalIntensity);
+	P.StreakVerticalLength = FMath::Clamp(StreakVerticalLength, 16.0f, 2048.0f);
 
 	P.bGlareEnabled = bGlareEnabled;
 	P.GlareIntensity = FMath::Max(0.0f, GlareIntensity);

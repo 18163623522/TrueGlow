@@ -61,11 +61,20 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ClampMin = "0", ClampMax = "1"))
 	float BloomKnee = 0.6f;
 
+	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ClampMin = "0", ClampMax = "8", ToolTip = "过阈值能量增益（bright-pass multiplier）"))
+	float BloomBrightMultiplier = 1.0f;
+
 	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ClampMin = "1", ClampMax = "6", ClampType = "int"))
 	int32 BloomLevels = 6;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ClampMin = "0", ClampMax = "6"))
 	float BloomBlurRadius = 2.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ToolTip = "Fast mode：跳过每级高斯模糊，保帧率"))
+	bool bBloomFastMode = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ClampMin = "0.1", ClampMax = "4", ToolTip = "高斯核 X/Y 各向异性缩放（>1 拉长对应方向光晕）"))
+	FVector2D BloomScale = FVector2D(1.0f, 1.0f);
 
 	UPROPERTY(EditAnywhere, Config, Category = "Bloom", meta = (ToolTip = "每级贡献权重（0=最细级）"))
 	TArray<float> BloomLevelWeights;
@@ -95,6 +104,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "Streak", meta = (ClampMin = "1", ClampMax = "8", ClampType = "int"))
 	int32 StreakPasses = 4;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Streak", meta = (ToolTip = "纵向光条（灯管上下漏光），衰减/色调/迭代与横向共用"))
+	bool bStreakVerticalEnabled = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Streak", meta = (ClampMin = "0", ClampMax = "4"))
+	float StreakVerticalIntensity = 0.25f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Streak", meta = (ClampMin = "16", ClampMax = "2048"))
+	float StreakVerticalLength = 240.0f;
 
 	// ---------------- Glare ----------------
 

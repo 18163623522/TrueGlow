@@ -1,11 +1,9 @@
 // Copyright pengxiwei. All Rights Reserved.
 
 #include "TrueGlowSettings.h"
+#include "TrueGlowBlueprintLibrary.h"
 #include "TrueGlowShaderBridge.h"
 
-#include "Engine/PostProcessVolume.h"
-#include "EngineUtils.h"
-#include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "Modules/ModuleManager.h"
 
@@ -67,43 +65,8 @@ static FAutoConsoleCommand GTrueGlowSetupVolume(
 	TEXT("Spawn/find a global PostProcessVolume that disables the engine bloom (TrueGlow replaces it)."),
 	FConsoleCommandDelegate::CreateLambda([]()
 	{
-		UWorld* World = GWorld;
-		if (!World)
-		{
-			UE_LOG(LogTrueGlowMain, Warning, TEXT("tg.SetupVolume: no world."));
-			return;
-		}
-
-		APostProcessVolume* Volume = nullptr;
-		for (TActorIterator<APostProcessVolume> It(World); It; ++It)
-		{
-			if (It->GetName().Contains(TEXT("TrueGlow")))
-			{
-				Volume = *It;
-				break;
-			}
-		}
-		if (!Volume)
-		{
-			Volume = World->SpawnActor<APostProcessVolume>();
-#if WITH_EDITOR
-			if (Volume)
-			{
-				Volume->SetActorLabel(TEXT("TrueGlowPostProcess"));
-			}
-#endif
-		}
-		if (!Volume)
-		{
-			UE_LOG(LogTrueGlowMain, Warning, TEXT("tg.SetupVolume: failed to spawn volume."));
-			return;
-		}
-
-		Volume->bUnbound = true;
-		Volume->Settings.bOverride_BloomIntensity = true;
-		Volume->Settings.BloomIntensity = 0.0f;
-		UE_LOG(LogTrueGlowMain, Log, TEXT("tg.SetupVolume: global PostProcessVolume '%s' ready, engine bloom off."),
-			*Volume->GetName());
+		UTrueGlowBlueprintLibrary::SetupEngineBloomOffVolume();
+		UE_LOG(LogTrueGlowMain, Log, TEXT("tg.SetupVolume: engine bloom off (global PostProcessVolume)."));
 	}));
 
 #undef LOCTEXT_NAMESPACE

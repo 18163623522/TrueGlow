@@ -19,8 +19,11 @@ struct FTrueGlowParams
 	float BloomIntensity = 1.0f;
 	float BloomThreshold = 1.0f;
 	float BloomKnee = 0.6f;
+	float BloomBrightMultiplier = 1.0f; // 过阈值能量增益（REAL BLOOM 的 bright-pass multiplier）
 	int32 BloomLevels = 6;          // 1..6
 	float BloomBlurRadius = 2.0f;   // 每级高斯半径（像素，0 = 关）
+	bool bBloomFastMode = false;    // 跳过每级高斯保帧率（REAL BLOOM 的 fast mode）
+	FVector2D BloomScale = FVector2D(1.0f, 1.0f); // 高斯核 X/Y 各向异性缩放（kernel scale）
 	float BloomLevelWeights[6] = { 0.6f, 0.7f, 0.8f, 0.95f, 1.1f, 1.25f };
 	FLinearColor BloomLevelTints[6] = {
 		FLinearColor(0.95f, 0.98f, 1.00f, 1.0f),
@@ -39,6 +42,11 @@ struct FTrueGlowParams
 	float StreakThickness = 2.0f;     // 垂直粗细（像素）
 	float StreakAttenuation = 0.35f;  // 衰减率，越大光条越收
 	int32 StreakPasses = 4;           // 1..8 迭代次数
+
+	// 纵向 streak（灯管上下漏光，REAL BLOOM 的 vertical streak；衰减/tint/次数与横向共用）
+	bool bStreakVerticalEnabled = false;
+	float StreakVerticalIntensity = 0.25f;
+	float StreakVerticalLength = 240.0f; // 参考 1080p 像素
 
 	// Glare（星芒）
 	bool bGlareEnabled = true;
