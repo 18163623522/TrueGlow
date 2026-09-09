@@ -57,6 +57,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Streak") static void SetVerticalStreakLength(float InLengthPx);
 
 	// ---------------- Glare ----------------
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetGhostIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetHaloIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareEnabled(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareTint(FLinearColor InTint);

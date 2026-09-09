@@ -1,0 +1,71 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 镜头光斑（参考 Unity HDRP / UE SR Lens Flares 的经典构成）：
+//   Ghost 幻影 —— 光圈内部反射：亮源沿「像素↔屏幕光轴(中心)」连线产生一串镜像光斑，
+//                 每枚幻影自带径向红蓝色散（彩虹幻影），亮度随序数衰减、向屏幕边缘衰减
+//   Halo  光环 —— 光圈全内反射形成的光源周围圆环，带轻微色散
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+uint GhostCount;
+float GhostSpacing;   // 相邻幻影沿中心线的间距系数
+float GhostDispersal; // 幻影色散强度
+float GhostIntensity;
+float HaloRadius;     // UV 单位
+float HaloIntensity;
+
+float3 SampleBright(float2 UVm)
+{
+	return Texture2DSampleLevel(InputTexture, InputSampler,
+		clamp(UVm, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0).rgb;
+}
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 ToC = float2(0.5, 0.5) - UV;
+
+	// ---- Ghost 幻影链 ----
+	float3 GhostSum = float3(0, 0, 0);
+	float WeightSum = 0.0;
+	const int G = int(GhostCount);
+
+	for (int k = 0; k < G; ++k)
+	{
+		const float F = GhostSpacing * float(k + 1);
+		const float2 GP = UV + ToC * F;
+		const float EdgeMask = saturate(1.0 - length(GP - 0.5) * 1.35);
+		const float W = exp(-float(k) * 0.55) * EdgeMask;
+
+		// 每枚幻影径向色散（越远越散）
+		const float2 CD = normalize(ToC) * (GhostDispersal * 0.004 * (0.5 + 0.5 * float(k)));
+		float3 Ghost;
+		Ghost.r = SampleBright(GP + CD).r;
+		Ghost.g = SampleBright(GP).g;
+		Ghost.b = SampleBright(GP - CD).b;
+
+		GhostSum += Ghost * W;
+		WeightSum += W;
+	}
+	GhostSum = GhostSum / max(WeightSum, 0.001) * saturate(GhostIntensity);
+
+	// ---- Halo 光环（径向环采样 + 微色散）----
+	float3 Halo = float3(0, 0, 0);
+	if (HaloIntensity > 0.001)
+	{
+		const float2 HD = normalize(ToC) * HaloRadius;
+		Halo.r = SampleBright(UV + HD * 1.03).r;
+		Halo.g = SampleBright(UV + HD).g;
+		Halo.b = SampleBright(UV + HD * 0.97).b;
+		Halo *= saturate(dot(ToC, ToC) * 4.0) * HaloIntensity; // 中心区域有效
+	}
+
+	OutColor = float4(GhostSum + Halo, 0.0);
+}

@@ -11,34 +11,34 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.bAllowSceneCapture = bAllowSceneCapture;
 
 	P.bBloomEnabled = bBloomEnabled;
-	P.BloomIntensity = FMath::Max(0.0f, BloomIntensity);
+	P.BloomIntensity = BloomIntensity;
 	P.BloomThreshold = FMath::Max(0.0f, BloomThreshold);
 	P.BloomKnee = FMath::Clamp(BloomKnee, 0.0f, 1.0f);
-	P.BloomBrightMultiplier = FMath::Clamp(BloomBrightMultiplier, 0.0f, 8.0f);
-	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 6);
-	P.BloomBlurRadius = FMath::Clamp(BloomBlurRadius, 0.0f, 8.0f);
-	P.GaussianIterations = FMath::Clamp(GaussianIterations, 1, 2);
-	P.ChromaticDispersion = FMath::Clamp(ChromaticDispersion, 0.0f, 1.0f);
+	P.BloomBrightMultiplier = FMath::Max(0.0f, BloomBrightMultiplier);
+	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 8);
+	P.BloomBlurRadius = FMath::Max(0.0f, BloomBlurRadius);
+	P.GaussianIterations = FMath::Clamp(GaussianIterations, 1, 3);
+	P.ChromaticDispersion = FMath::Max(0.0f, ChromaticDispersion);
 	P.bLensDirt = bLensDirt;
-	P.LensDirtIntensity = FMath::Clamp(LensDirtIntensity, 0.0f, 3.0f);
-	P.FilmSoftIntensity = FMath::Clamp(FilmSoftIntensity, 0.0f, 2.0f);
-	P.FilmSoftRadius = FMath::Clamp(FilmSoftRadius, 1.0f, 8.0f);
-	P.DualTintStrength = FMath::Clamp(DualTintStrength, 0.0f, 1.0f);
+	P.LensDirtIntensity = FMath::Max(0.0f, LensDirtIntensity);
+	P.FilmSoftIntensity = FMath::Max(0.0f, FilmSoftIntensity);
+	P.FilmSoftRadius = FMath::Max(0.25f, FilmSoftRadius);
+	P.DualTintStrength = FMath::Max(0.0f, DualTintStrength);
 	P.WarmCoreColor = WarmCoreColor;
 	P.CoolFringeColor = CoolFringeColor;
 	P.bBloomFastMode = bBloomFastMode;
 	P.BloomScale = FVector2D(
-		FMath::Clamp(BloomScale.X, 0.1f, 4.0f),
-		FMath::Clamp(BloomScale.Y, 0.1f, 4.0f));
+		FMath::Clamp(BloomScale.X, 0.05f, 10.0f),
+		FMath::Clamp(BloomScale.Y, 0.05f, 10.0f));
 
 	const float BloomIntensityO = TrueGlowCVars::BloomIntensityOverride();
 	const float BloomThresholdO = TrueGlowCVars::BloomThresholdOverride();
 	const int32 BloomLevelsO = TrueGlowCVars::BloomLevelsOverride();
 	if (BloomIntensityO >= 0.0f) { P.BloomIntensity = BloomIntensityO; }
 	if (BloomThresholdO >= 0.0f) { P.BloomThreshold = BloomThresholdO; }
-	if (BloomLevelsO >= 1) { P.BloomLevels = FMath::Clamp(BloomLevelsO, 1, 6); }
+	if (BloomLevelsO >= 1) { P.BloomLevels = FMath::Clamp(BloomLevelsO, 1, 8); }
 
-	for (int32 i = 0; i < 6; ++i)
+	for (int32 i = 0; i < 8; ++i)
 	{
 		if (i < BloomLevelWeights.Num())
 		{
@@ -53,31 +53,39 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.bStreakEnabled = bStreakEnabled;
 	P.StreakIntensity = FMath::Max(0.0f, StreakIntensity);
 	P.StreakTint = StreakTint;
-	P.StreakLength = FMath::Clamp(StreakLength, 16.0f, 2048.0f);
-	P.StreakThickness = FMath::Clamp(StreakThickness, 0.25f, 16.0f);
+	P.StreakLength = FMath::Max(2.0f, StreakLength);
+	P.StreakThickness = FMath::Max(0.01f, StreakThickness);
 	P.bStreakDualLine = bStreakDualLine;
-	P.StreakDualLineSeparation = FMath::Clamp(StreakDualLineSeparation, 2.0f, 64.0f);
-	P.StreakDualLineIntensity = FMath::Clamp(StreakDualLineIntensity, 0.0f, 1.0f);
-	P.StreakAttenuation = FMath::Clamp(StreakAttenuation, 0.05f, 1.0f);
-	P.StreakPasses = FMath::Clamp(StreakPasses, 1, 8);
+	P.StreakDualLineSeparation = FMath::Max(0.5f, StreakDualLineSeparation);
+	P.StreakDualLineIntensity = FMath::Max(0.0f, StreakDualLineIntensity);
+	P.StreakAttenuation = FMath::Max(0.001f, StreakAttenuation);
+	P.StreakPasses = FMath::Clamp(StreakPasses, 1, 16);
 	P.bStreakOwnThreshold = bStreakOwnThreshold;
 	P.StreakThreshold = FMath::Max(0.0f, StreakThreshold);
 	const float StreakIntensityO = TrueGlowCVars::StreakIntensityOverride();
 	const float StreakLengthO = TrueGlowCVars::StreakLengthOverride();
 	if (StreakIntensityO >= 0.0f) { P.StreakIntensity = StreakIntensityO; }
-	if (StreakLengthO >= 0.0f) { P.StreakLength = FMath::Clamp(StreakLengthO, 16.0f, 2048.0f); }
+	if (StreakLengthO >= 0.0f) { P.StreakLength = FMath::Max(2.0f, StreakLengthO); }
 
 	P.bStreakVerticalEnabled = bStreakVerticalEnabled;
 	P.StreakVerticalIntensity = FMath::Max(0.0f, StreakVerticalIntensity);
-	P.StreakVerticalLength = FMath::Clamp(StreakVerticalLength, 16.0f, 2048.0f);
+	P.StreakVerticalLength = FMath::Max(2.0f, StreakVerticalLength);
+
+	P.GhostIntensity = FMath::Max(0.0f, GhostIntensity);
+	P.GhostCount = FMath::Clamp(GhostCount, 1, 8);
+	P.GhostSpacing = FMath::Clamp(GhostSpacing, 0.1f, 1.5f);
+	P.GhostDispersal = FMath::Max(0.0f, GhostDispersal);
+	P.HaloIntensity = FMath::Max(0.0f, HaloIntensity);
+	P.HaloRadius = FMath::Clamp(HaloRadius, 0.02f, 0.6f);
+	P.FlareTint = FlareTint;
 
 	P.bGlareEnabled = bGlareEnabled;
 	P.GlareIntensity = FMath::Max(0.0f, GlareIntensity);
 	P.GlareTint = GlareTint;
-	P.GlareDirections = (GlareDirections == 6) ? 6 : 4;
-	P.GlareRadius1 = FMath::Clamp(GlareRadius1, 4.0f, 128.0f);
-	P.GlareRadius2 = FMath::Clamp(GlareRadius2, 8.0f, 512.0f);
-	P.GlareTaps = FMath::Clamp(GlareTaps, 2, 16);
+	P.GlareDirections = FMath::Clamp(GlareDirections, 2, 12);
+	P.GlareRadius1 = FMath::Max(0.5f, GlareRadius1);
+	P.GlareRadius2 = FMath::Max(1.0f, GlareRadius2);
+	P.GlareTaps = FMath::Clamp(GlareTaps, 1, 32);
 	const float GlareIntensityO = TrueGlowCVars::GlareIntensityOverride();
 	if (GlareIntensityO >= 0.0f) { P.GlareIntensity = GlareIntensityO; }
 

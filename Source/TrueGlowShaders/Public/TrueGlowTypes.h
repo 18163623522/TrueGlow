@@ -20,7 +20,7 @@ struct FTrueGlowParams
 	float BloomThreshold = 1.0f;
 	float BloomKnee = 0.6f;
 	float BloomBrightMultiplier = 1.0f; // 过阈值能量增益（REAL BLOOM 的 bright-pass multiplier）
-	int32 BloomLevels = 6;          // 1..6
+	int32 BloomLevels = 6;          // 1..8
 	float BloomBlurRadius = 3.0f;   // 每级高斯半径（像素，0 = 关）
 	int32 GaussianIterations = 2;   // 1..2 每级 H/V 模糊迭代数（高斯感柔化）
 	bool bBloomFastMode = false;    // 跳过每级高斯保帧率（REAL BLOOM 的 fast mode）
@@ -34,14 +34,16 @@ struct FTrueGlowParams
 	FLinearColor WarmCoreColor = FLinearColor(1.00f, 0.95f, 0.85f, 1.0f);
 	FLinearColor CoolFringeColor = FLinearColor(0.80f, 0.90f, 1.15f, 1.0f);
 	FVector2D BloomScale = FVector2D(1.0f, 1.0f); // 高斯核 X/Y 各向异性缩放（kernel scale）
-	float BloomLevelWeights[6] = { 0.6f, 0.7f, 0.8f, 0.95f, 1.1f, 1.25f };
-	FLinearColor BloomLevelTints[6] = {
+	float BloomLevelWeights[8] = { 0.6f, 0.7f, 0.8f, 0.95f, 1.1f, 1.25f, 1.4f, 1.55f };
+	FLinearColor BloomLevelTints[8] = {
 		FLinearColor(0.95f, 0.98f, 1.00f, 1.0f),
 		FLinearColor(0.90f, 0.95f, 1.05f, 1.0f),
 		FLinearColor(0.85f, 0.92f, 1.10f, 1.0f),
 		FLinearColor(0.80f, 0.90f, 1.15f, 1.0f),
 		FLinearColor(0.75f, 0.87f, 1.20f, 1.0f),
 		FLinearColor(0.70f, 0.85f, 1.25f, 1.0f),
+		FLinearColor(0.65f, 0.83f, 1.30f, 1.0f),
+		FLinearColor(0.60f, 0.80f, 1.35f, 1.0f),
 	};
 
 	// Anamorphic streak（横向光条）
@@ -62,6 +64,15 @@ struct FTrueGlowParams
 	bool bStreakVerticalEnabled = false;
 	float StreakVerticalIntensity = 0.25f;
 	float StreakVerticalLength = 240.0f; // 参考 1080p 像素
+
+	// 镜头光斑 Flare（幻影 Ghost + 光环 Halo）
+	float GhostIntensity = 0.0f;     // 幻影强度（0=关）
+	int32 GhostCount = 4;           // 1-8 枚
+	float GhostSpacing = 0.45f;     // 沿光轴间距系数
+	float GhostDispersal = 1.0f;    // 幻影彩虹色散
+	float HaloIntensity = 0.0f;     // 光环强度（0=关）
+	float HaloRadius = 0.12f;       // 光环半径（UV 比例）
+	FLinearColor FlareTint = FLinearColor(1, 1, 1, 1);
 
 	// Glare（星芒）
 	bool bGlareEnabled = true;

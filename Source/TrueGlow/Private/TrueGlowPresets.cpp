@@ -35,7 +35,7 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.StreakDualLineIntensity = 0.5f;
 	S.BloomScale = FVector2D(1.0f, 1.0f);
 
-	S.BloomLevelWeights = { 0.60f, 0.70f, 0.80f, 0.95f, 1.10f, 1.25f };
+	S.BloomLevelWeights = { 0.60f, 0.70f, 0.80f, 0.95f, 1.10f, 1.25f, 1.40f, 1.55f };
 	S.BloomLevelTints = {
 		FLinearColor(0.95f, 0.98f, 1.00f, 1.0f),
 		FLinearColor(0.90f, 0.95f, 1.05f, 1.0f),
@@ -43,6 +43,8 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 		FLinearColor(0.80f, 0.90f, 1.15f, 1.0f),
 		FLinearColor(0.75f, 0.87f, 1.20f, 1.0f),
 		FLinearColor(0.70f, 0.85f, 1.25f, 1.0f),
+		FLinearColor(0.65f, 0.83f, 1.30f, 1.0f),
+		FLinearColor(0.60f, 0.80f, 1.35f, 1.0f),
 	};
 
 	S.bStreakEnabled = true;
@@ -55,6 +57,14 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.bStreakVerticalEnabled = false;
 	S.StreakVerticalIntensity = 0.25f;
 	S.StreakVerticalLength = 240.0f;
+
+	S.GhostIntensity = 0.0f;
+	S.GhostCount = 4;
+	S.GhostSpacing = 0.45f;
+	S.GhostDispersal = 1.0f;
+	S.HaloIntensity = 0.0f;
+	S.HaloRadius = 0.12f;
+	S.FlareTint = FLinearColor(1, 1, 1, 1);
 
 	S.bGlareEnabled = true;
 	S.GlareTint = FLinearColor(1, 1, 1, 1);
@@ -87,6 +97,8 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 		S.StreakVerticalIntensity = 0.40f;
 		S.StreakVerticalLength = 300.0f;
 		S.ChromaticDispersion = 0.30f;
+		S.GhostIntensity = 0.35f;         // 幻影+光环
+		S.HaloIntensity = 0.20f;
 		S.bLensDirt = true;               // 脏镜头
 		S.LensDirtIntensity = 0.8f;
 		S.FilmSoftIntensity = 0.50f;

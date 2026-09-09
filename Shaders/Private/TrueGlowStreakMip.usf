@@ -1,0 +1,62 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// Mip 级联变形光条（断层根治版）：
+// 几何级 tap 距离 d_k = D0 * Growth^k，每个 tap 按距离从对应降采样级（Mip0..3）采样，
+// 任意长度下每个尺度的采样都致密——点状高亮不会从 tap 缝隙漏掉（无珠链断层）。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D StreakMip0;
+SamplerState StreakMip0Sampler;
+Texture2D StreakMip1;
+SamplerState StreakMip1Sampler;
+Texture2D StreakMip2;
+SamplerState StreakMip2Sampler;
+Texture2D StreakMip3;
+SamplerState StreakMip3Sampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)   // Mip0（¼ 分辨率）
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float2 Direction;
+float D0;         // 起始距离（Mip0 texel）
+float Growth;     // 几何增长率
+uint Taps;
+float Attenuation;
+
+float3 SampleStreakMip(float2 UVm, int Mip)
+{
+	if (Mip <= 0) { return StreakMip0.SampleLevel(StreakMip0Sampler, UVm, 0).rgb; }
+	if (Mip == 1) { return StreakMip1.SampleLevel(StreakMip1Sampler, UVm, 0).rgb; }
+	if (Mip == 2) { return StreakMip2.SampleLevel(StreakMip2Sampler, UVm, 0).rgb; }
+	return StreakMip3.SampleLevel(StreakMip3Sampler, UVm, 0).rgb;
+}
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	const float2 UVC = clamp(UV, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax);
+
+	const int T = int(Taps);
+	const float InvT = 1.0 / float(T - 1);
+
+	float3 Sum = float3(0, 0, 0);
+	float TotalWeight = 0.0;
+
+	for (int k = 0; k < T; ++k)
+	{
+		const float D = D0 * pow(Growth, float(k));            // 距离（Mip0 texel）
+		const float t = float(k) * InvT;
+		const float w = exp(-t * Attenuation * 6.0);
+
+		// 距离越远选越粗的 mip：采样密度在各级保持恒定
+		const int Mip = clamp(int(log2(max(D / 1.5, 1.0))), 0, 3);
+
+		const float2 Off = Direction * (D * Input_ExtentInverse);
+		Sum += w * (SampleStreakMip(UVC + Off, Mip) + SampleStreakMip(UVC - Off, Mip));
+		TotalWeight += 2.0 * w;
+	}
+
+	OutColor = float4(Sum / max(TotalWeight, 0.0001), 0.0);
+}
