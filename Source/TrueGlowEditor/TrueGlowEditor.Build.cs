@@ -13,7 +13,6 @@ public class TrueGlowEditor : ModuleRules
 			"Engine",
 			"TrueGlow",
 			"TrueGlowShaders",
-			"Settings",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

@@ -37,7 +37,7 @@
 
 | 操作 | 方式 |
 |---|---|
-| 调参 | **Window → TrueGlow** 面板窗口（预设按钮 + 全参数实时预览），或 Project Settings → Plugins → TrueGlow 物理辉光 |
+| 调参 | **Window → TrueGlow** 面板窗口（唯一 UI 入口：预设按钮 + 全参数实时预览） |
 | 预设 | 设置页 Preset 下拉：**鸣潮 WuWa**（默认）/ Neon 赛博 / Subtle 克制；或控制台 `tg.ApplyPreset Neon` |
 | 开关对比 | `tg.Enable 0` / `1`（0 = 完全旁路零开销） |
 | 关引擎 bloom | 控制台 `tg.SetupVolume`（防双重辉光，建议进关卡先跑一次） |
@@ -84,7 +84,7 @@ SceneColor ───────────────────────
 ```
 Source/TrueGlowShaders/   # 7 个全局 shader + 视图扩展 + RDG 管线 + CVar
 Source/TrueGlow/          # 设置(UCLASS config) + 三预设 + tg.* 命令 + 蓝图函数库
-Source/TrueGlowEditor/    # Project Settings 页注册 + Window→TrueGlow 参数面板窗口
+Source/TrueGlowEditor/    # Window→TrueGlow 参数面板窗口（唯一 UI 入口）
 Shaders/Private/           # 7 个 .usf + 公共函数库 .ush
 docs/TechnicalDoc.md       # 深度技术文档（注入点证据链/三模块约束/pass 数学/七坑清单）
 ```

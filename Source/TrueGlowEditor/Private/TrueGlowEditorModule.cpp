@@ -2,7 +2,6 @@
 
 #include "TrueGlowSettings.h"
 #include "TrueGlowBlueprintLibrary.h"
-#include "ISettingsModule.h"
 #include "Modules/ModuleManager.h"
 
 #include "Framework/Docking/TabManager.h"
@@ -128,49 +127,28 @@ namespace
 }
 
 /**
- * 编辑器模块：Project Settings 注册 + Window→TrueGlow 面板窗口。
+ * 编辑器模块：Window→TrueGlow 参数面板（唯一 UI 入口）。
+ * 注意：故意不再向 ISettingsModule 注册 Project Settings 页——那会在 Window 菜单
+ * 产生第二个条目（与面板重复），所有参数已全部在面板里。
  */
 class FTrueGlowEditorModule : public IModuleInterface
 {
 public:
 	virtual void StartupModule() override
 	{
-		// 强制确保 Settings 模块在位（PostEngineInit 正常都已加载，这里防呆）
-		ISettingsModule* SettingsModule = FModuleManager::LoadModulePtr<ISettingsModule>("Settings");
-		if (SettingsModule)
-		{
-			TWeakPtr<ISettingsSection> Section = SettingsModule->RegisterSettings(
-				TEXT("Project"),
-				TEXT("Plugins"),
-				TEXT("TrueGlow"),
-				LOCTEXT("TrueGlowSettings_Name", "TrueGlow 物理辉光"),
-				LOCTEXT("TrueGlowSettings_Desc", "HDR 金字塔 Bloom + 变形镜头 Streak + 星芒 Glare"),
-				GetMutableDefault<UTrueGlowSettings>());
-
-			UE_LOG(LogTrueGlowEditor, Log, TEXT("TrueGlow settings registered into Project Settings (Plugins category)."));
-		}
-		else
-		{
-			UE_LOG(LogTrueGlowEditor, Warning, TEXT("TrueGlow: Settings module unavailable; Project Settings page NOT registered."));
-		}
-
-		// Window → TrueGlow 面板
+		// Window → TrueGlow 面板（唯一入口）
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner("TrueGlowWindow",
 			FOnSpawnTab::CreateStatic(&SpawnTrueGlowTab))
 			.SetDisplayName(LOCTEXT("TabTitle", "TrueGlow"))
 			.SetTooltipText(LOCTEXT("TabTooltip", "TrueGlow 物理辉光参数面板"))
 			.SetMenuType(ETabSpawnerMenuType::Enabled);
+
+		UE_LOG(LogTrueGlowEditor, Log, TEXT("TrueGlow panel tab registered (Window menu)."));
 	}
 
 	virtual void ShutdownModule() override
 	{
 		FGlobalTabmanager::Get()->UnregisterNomadTabSpawner("TrueGlowWindow");
-
-		ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
-		if (SettingsModule)
-		{
-			SettingsModule->UnregisterSettings(TEXT("Project"), TEXT("Plugins"), TEXT("TrueGlow"));
-		}
 	}
 };
 

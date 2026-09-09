@@ -94,7 +94,7 @@ BeforeTranslucency 链 (L450)
 |---|---|---|---|
 | `TrueGlowShaders` | **PostConfigInit** | 7 个 FGlobalShader + 视图扩展 + CVar + 参数桥 | 约束① |
 | `TrueGlow` | Default | `UTrueGlowSettings`(UCLASS config) + 预设 + `tg.*` 命令 | 约束② |
-| `TrueGlowEditor` | PostEngineInit | ISettingsModule 注册设置页 | 编辑器服务就绪 |
+| `TrueGlowEditor` | PostEngineInit | Window→TrueGlow 面板（唯一 UI 入口；不再注册 Project Settings 页——那会在 Window 菜单产生第二个重复条目） | 编辑器服务就绪 |
 
 ### 约束①：shader 类型注册必须早于 InitializeShaderTypes
 
@@ -212,7 +212,7 @@ FKuroGlowParams（POD 快照，游戏线程每帧 BeginRenderViewFamily 刷新�
 渲染线程回调消费
 ```
 
-- **三入口**：设置页 / Window→TrueGlow 面板（美术）、`tg.*` CVar（技术/PIE 实时）、
+- **三入口**：Window→TrueGlow 面板（美术，唯一 UI）、`tg.*` CVar（技术/PIE 实时）、
   `UTrueGlowBlueprintLibrary` 静态函数（运行时动态驱动：过场、游戏状态、昼夜），CVar 负值=不覆盖
 - **预设机制**：设置页改 Preset 枚举 → `PostEditChangeProperty` 整套覆盖参数并 SaveConfig；
   手动改任何单项自动回落 Custom（保留用户值）
