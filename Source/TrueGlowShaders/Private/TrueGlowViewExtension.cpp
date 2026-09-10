@@ -231,6 +231,62 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	}
 	FRDGTextureRef StreakBase = StreakQuarterBase ? StreakQuarterBase : QuarterBase;
 
+	// Mip 级联链（断层根治 + 星芒镜复用）：StreakBase → 3 级降采样
+	FRDGTextureRef MipTex[4] = { nullptr, nullptr, nullptr, nullptr };
+	FIntPoint MipSz[4];
+	if (StreakBase)
+	{
+		MipTex[0] = StreakBase;
+		MipSz[0] = QuarterSize;
+		for (int32 m = 1; m < 4; ++m)
+		{
+			MipSz[m] = Halve(MipSz[m - 1]);
+			MipTex[m] = CreateGlowTexture(GraphBuilder, MipSz[m], *FString::Printf(TEXT("TrueGlow.StreakMip%d"), m));
+			AddDownsamplePass(MipTex[m - 1], MipSz[m - 1], MipTex[m], MipSz[m], FVector4(1, 1, 1, 1),
+				*FString::Printf(TEXT("StreakMip%d"), m));
+		}
+	}
+
+	// Mip 级联主 pass：几何 tap 全距离覆盖（长光条无珠链断层）
+	auto AddMipStreakPass = [&](
+		FRDGTextureRef Dst, const FVector2D& Direction, float MaxDistTexels, const TCHAR* Name,
+		FRDGTextureRef AccumSrc = nullptr,
+		const FLinearColor& AccumMul = FLinearColor(0, 0, 0, 0),
+		const FLinearColor& SelfTint = FLinearColor(1, 1, 1, 1))
+	{
+		const int32 MipTaps = 24;
+		const float D0 = 1.5f;
+		const float Growth = FMath::Pow(FMath::Max(MaxDistTexels, D0 * 2.0f) / D0, 1.0f / (MipTaps - 1));
+
+		FTrueGlowStreakMipPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowStreakMipPS::FParameters>();
+		Prm->Input = GetExactViewportParams(QuarterSize);
+		Prm->Output = GetExactViewportParams(QuarterSize);
+		Prm->StreakMip0 = MipTex[0];
+		Prm->StreakMip0Sampler = BilinearClampSampler;
+		Prm->StreakMip1 = MipTex[1];
+		Prm->StreakMip1Sampler = BilinearClampSampler;
+		Prm->StreakMip2 = MipTex[2];
+		Prm->StreakMip2Sampler = BilinearClampSampler;
+		Prm->StreakMip3 = MipTex[3];
+		Prm->StreakMip3Sampler = BilinearClampSampler;
+		Prm->Direction = Direction;
+		Prm->D0 = D0;
+		Prm->Growth = Growth;
+		Prm->Taps = MipTaps;
+		Prm->Attenuation = P.StreakAttenuation;
+		Prm->AccumTexture = AccumSrc;
+		Prm->AccumSampler = BilinearClampSampler;
+		Prm->AccumMul = FVector4(AccumMul.R, AccumMul.G, AccumMul.B, 1.0f);
+		Prm->SelfTint = FVector4(SelfTint.R, SelfTint.G, SelfTint.B, 1.0f);
+		Prm->RenderTargets[0] = FRenderTargetBinding(Dst, ERenderTargetLoadAction::ENoAction);
+
+		TShaderMapRef<FTrueGlowStreakMipPS> Shader(ShaderMap);
+		FPixelShaderUtils::AddFullscreenPass(
+			GraphBuilder, ShaderMap,
+			RDG_EVENT_NAME("TrueGlow.StreakMip.%s %dx%d", Name, QuarterSize.X, QuarterSize.Y),
+			Shader, Prm, FIntRect(FIntPoint::ZeroValue, QuarterSize));
+	};
+
 	// ------------------------------------------------------------------
 	// 2) Bloom 金字塔：降采样链 + 每级高斯 + tent 升采样合并
 	FRDGTextureRef BloomResult = BlackDummy;
@@ -337,50 +393,6 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		const int32 StreakTaps = 12;
 		const int32 Passes = FMath::Clamp(P.StreakPasses, 1, 8);
 
-		// Mip 级联链（断层根治）：StreakBase → 3 级降采样
-		FRDGTextureRef MipTex[4];
-		FIntPoint MipSz[4];
-		MipTex[0] = StreakBase;
-		MipSz[0] = QuarterSize;
-		for (int32 m = 1; m < 4; ++m)
-		{
-			MipSz[m] = Halve(MipSz[m - 1]);
-			MipTex[m] = CreateGlowTexture(GraphBuilder, MipSz[m], *FString::Printf(TEXT("TrueGlow.StreakMip%d"), m));
-			AddDownsamplePass(MipTex[m - 1], MipSz[m - 1], MipTex[m], MipSz[m], FVector4(1, 1, 1, 1),
-				*FString::Printf(TEXT("StreakMip%d"), m));
-		}
-
-		// Mip 级联主 pass：几何 tap 全距离覆盖（长光条无珠链断层）
-		auto AddMipStreakPass = [&](FRDGTextureRef Dst, const FVector2D& Direction, float MaxDistTexels, const TCHAR* Name)
-		{
-			const int32 MipTaps = 24;
-			const float D0 = 1.5f;
-			const float Growth = FMath::Pow(FMath::Max(MaxDistTexels, D0 * 2.0f) / D0, 1.0f / (MipTaps - 1));
-
-			FTrueGlowStreakMipPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowStreakMipPS::FParameters>();
-			Prm->Input = GetExactViewportParams(QuarterSize);
-			Prm->Output = GetExactViewportParams(QuarterSize);
-			Prm->StreakMip0 = MipTex[0];
-			Prm->StreakMip0Sampler = BilinearClampSampler;
-			Prm->StreakMip1 = MipTex[1];
-			Prm->StreakMip1Sampler = BilinearClampSampler;
-			Prm->StreakMip2 = MipTex[2];
-			Prm->StreakMip2Sampler = BilinearClampSampler;
-			Prm->StreakMip3 = MipTex[3];
-			Prm->StreakMip3Sampler = BilinearClampSampler;
-			Prm->Direction = Direction;
-			Prm->D0 = D0;
-			Prm->Growth = Growth;
-			Prm->Taps = MipTaps;
-			Prm->Attenuation = P.StreakAttenuation;
-			Prm->RenderTargets[0] = FRenderTargetBinding(Dst, ERenderTargetLoadAction::ENoAction);
-
-			TShaderMapRef<FTrueGlowStreakMipPS> Shader(ShaderMap);
-			FPixelShaderUtils::AddFullscreenPass(
-				GraphBuilder, ShaderMap,
-				RDG_EVENT_NAME("TrueGlow.StreakMip.%s %dx%d", Name, QuarterSize.X, QuarterSize.Y),
-				Shader, Prm, FIntRect(FIntPoint::ZeroValue, QuarterSize));
-		};
 
 		auto AddStreakPass = [&](FRDGTextureRef Src, FRDGTextureRef Dst, const FVector2D& Direction, float StepPx, int32 Taps, float Attenuation, const TCHAR* Name)
 		{
@@ -478,11 +490,38 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	}
 
 	// ------------------------------------------------------------------
-	// 4') 镜头光斑：幻影 Ghost + 光环 Halo（¼ 分辨率，源 = 光条亮部基底）
+	// 4') 星芒镜 Star Filter：多条任意角度长芒（Mip 级联链式叠加，无断层）
+	//     与 4'') 镜头光斑共享 TrueGlow.Flare 统计
+	FRDGTextureRef StarAccum = nullptr;
+	if (P.bStarFilter && P.StarFilterIntensity > 0.001f && (StreakBase || QuarterBase))
+	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowFlare);
+		const float SFHeightScale = static_cast<float>(QuarterSize.Y) / 1080.0f;
+		const float SFMaxDist = FMath::Max(4.0f, P.StarFilterLength * SFHeightScale);
+		const int32 Lines = FMath::Clamp(P.StarFilterRays, 4, 8) / 2;   // N 芒 = N/2 条过中心直线
+		const float RotRad = P.StarFilterRotation * (PI / 180.0f);
+
+		for (int32 Li = 0; Li < Lines; ++Li)
+		{
+			const float Ang = RotRad + Li * PI / Lines;
+			FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize,
+				*FString::Printf(TEXT("TrueGlow.StarRay%d"), Li));
+			AddMipStreakPass(Target, FVector2D(FMath::Cos(Ang), FMath::Sin(Ang)), SFMaxDist,
+				*FString::Printf(TEXT("Ray%d"), Li),
+				StarAccum, Li > 0 ? FLinearColor(1, 1, 1, 1) : FLinearColor(0, 0, 0, 0),
+				P.StarFilterTint);
+			StarAccum = Target;
+		}
+	}
+
+	// ------------------------------------------------------------------
+	// 4'') 镜头光斑：幻影 Ghost + 光环 Halo + 多边形光圈 + 光谱扇（含星芒镜累加）
 	FRDGTextureRef FlareResult = BlackDummy;
 	{
 		FRDGTextureRef FlareBase = StreakBase ? StreakBase : QuarterBase;
-		const bool bWantFlare = FlareBase && (P.GhostIntensity > 0.001f || P.HaloIntensity > 0.001f);
+		const bool bWantFlare = FlareBase &&
+			(P.GhostIntensity > 0.001f || P.HaloIntensity > 0.001f ||
+			 P.PolyIrisIntensity > 0.001f || P.FanIntensity > 0.001f || StarAccum);
 		if (bWantFlare)
 		{
 			RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowFlare);
@@ -499,6 +538,17 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 			Prm->GhostIntensity = P.GhostIntensity;
 			Prm->HaloRadius = P.HaloRadius;
 			Prm->HaloIntensity = P.HaloIntensity;
+			Prm->PolyIrisSides = FMath::Clamp(P.PolyIrisSides, 5, 9);
+			Prm->PolyIrisRotation = P.PolyIrisRotation;
+			Prm->PolyIrisRadius = P.PolyIrisRadius;
+			Prm->PolyIrisIntensity = P.PolyIrisIntensity;
+			Prm->FanCount = FMath::Clamp(P.FanCount, 3, 12);
+			Prm->FanSpread = P.FanSpread;
+			Prm->FanRadius = P.FanRadius;
+			Prm->FanIntensity = P.FanIntensity;
+			Prm->AccumTexture = StarAccum;
+			Prm->AccumSampler = BilinearClampSampler;
+			Prm->AccumWeight = StarAccum ? FMath::Max(0.0f, P.StarFilterIntensity) : 0.0f;
 			Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
 
 			TShaderMapRef<FTrueGlowFlarePS> Shader(ShaderMap);
@@ -507,6 +557,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 				RDG_EVENT_NAME("TrueGlow.Flare %dx%d", QuarterSize.X, QuarterSize.Y),
 				Shader, Prm, FIntRect(FIntPoint::ZeroValue, QuarterSize));
 			FlareResult = Target;
+		}
+		else if (StarAccum)
+		{
+			FlareResult = StarAccum;   // 只有星芒镜时直接输出
 		}
 	}
 
@@ -558,7 +612,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->FlareTexture = FlareResult;
 		Prm->FlareSampler = BilinearClampSampler;
 		Prm->FlareTint = ToTint4(P.FlareTint);
-		Prm->FlareIntensity = (P.GhostIntensity > 0.001f || P.HaloIntensity > 0.001f) ? 1.0f : 0.0f;
+		Prm->FlareIntensity = (P.GhostIntensity > 0.001f || P.HaloIntensity > 0.001f || P.PolyIrisIntensity > 0.001f || P.FanIntensity > 0.001f || P.bStarFilter) ? 1.0f : 0.0f;
 		Prm->RenderTargets[0] = FRenderTargetBinding(OutTexture, ERenderTargetLoadAction::ENoAction);
 
 		TShaderMapRef<FTrueGlowCompositePS> Shader(ShaderMap);

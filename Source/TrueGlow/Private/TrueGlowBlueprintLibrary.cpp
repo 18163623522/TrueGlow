@@ -49,6 +49,10 @@ void UTrueGlowBlueprintLibrary::SetVerticalStreakIntensity(float InIntensity) { 
 void UTrueGlowBlueprintLibrary::SetVerticalStreakLength(float InLengthPx) { S()->StreakVerticalLength = FMath::Clamp(InLengthPx, 16.0f, 2048.0f); }
 
 void UTrueGlowBlueprintLibrary::SetGhostIntensity(float InIntensity) { S()->GhostIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetStarFilterEnabled(bool bInEnabled) { S()->bStarFilter = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetStarFilterIntensity(float InIntensity) { S()->StarFilterIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetPolyIrisIntensity(float InIntensity) { S()->PolyIrisIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetFanIntensity(float InIntensity) { S()->FanIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetHaloIntensity(float InIntensity) { S()->HaloIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetGlareEnabled(bool bInEnabled) { S()->bGlareEnabled = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetGlareIntensity(float InIntensity) { S()->GlareIntensity = FMath::Max(0.0f, InIntensity); }

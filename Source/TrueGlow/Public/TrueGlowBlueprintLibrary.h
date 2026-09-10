@@ -58,6 +58,10 @@ public:
 
 	// ---------------- Glare ----------------
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetGhostIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetStarFilterEnabled(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetStarFilterIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetPolyIrisIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetFanIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetHaloIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareEnabled(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareIntensity(float InIntensity);

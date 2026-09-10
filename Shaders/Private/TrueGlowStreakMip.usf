@@ -25,6 +25,11 @@ float Growth;     // 几何增长率
 uint Taps;
 float Attenuation;
 
+Texture2D AccumTexture;   // 链式累加输入（星芒镜多芒叠加用）
+SamplerState AccumSampler;
+float4 AccumMul;          // 累加内容 × tint×权重（rgb=0 = 无累加）
+float4 SelfTint;          // 本条光条自身的染色
+
 float3 SampleStreakMip(float2 UVm, int Mip)
 {
 	if (Mip <= 0) { return StreakMip0.SampleLevel(StreakMip0Sampler, UVm, 0).rgb; }
@@ -58,5 +63,11 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		TotalWeight += 2.0 * w;
 	}
 
-	OutColor = float4(Sum / max(TotalWeight, 0.0001), 0.0);
+	float3 Result = Sum / max(TotalWeight, 0.0001) * SelfTint.rgb;
+	if (dot(AccumMul.rgb, float3(1, 1, 1)) > 0.001)
+	{
+		Result += Texture2DSampleLevel(AccumTexture, AccumSampler,
+			clamp(UV, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0).rgb * AccumMul.rgb;
+	}
+	OutColor = float4(Result, 0.0);
 }

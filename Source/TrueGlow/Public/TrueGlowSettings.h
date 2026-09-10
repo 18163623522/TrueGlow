@@ -181,6 +181,48 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光斑颜色 FlareTint", ToolTip = "白色 = 保留源色"))
 	FLinearColor FlareTint = FLinearColor(1, 1, 1, 1);
 
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "启用星芒镜 StarFilter", ToolTip = "星芒镜滤镜式多条长芒（Optical Flares Star Filter / 电影星芒镜），Mip 级联无断层"))
+	bool bStarFilter = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "星芒镜强度 StarFilterIntensity", EditCondition = "bStarFilter", ClampMin = "0", ClampMax = "8"))
+	float StarFilterIntensity = 0.8f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "星芒芒数 StarFilterRays", EditCondition = "bStarFilter", ClampMin = "4", ClampMax = "8", ClampType = "int"))
+	int32 StarFilterRays = 4;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "星芒旋转 StarFilterRotation", EditCondition = "bStarFilter", ClampMin = "0", ClampMax = "360"))
+	float StarFilterRotation = 15.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "星芒长度 StarFilterLength", EditCondition = "bStarFilter", ClampMin = "4", ClampMax = "4096"))
+	float StarFilterLength = 720.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "星芒颜色 StarFilterTint", EditCondition = "bStarFilter"))
+	FLinearColor StarFilterTint = FLinearColor(1, 1, 1, 1);
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "多边形光圈强度 PolyIrisIntensity", ToolTip = "光圈叶片形状（五/六/七边形）的光斑，光谱染色；0 = 关", ClampMin = "0", ClampMax = "8"))
+	float PolyIrisIntensity = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光圈边数 PolyIrisSides", ClampMin = "5", ClampMax = "9", ClampType = "int"))
+	int32 PolyIrisSides = 6;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光圈旋转 PolyIrisRotation", ClampMin = "0", ClampMax = "360"))
+	float PolyIrisRotation = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光圈半径 PolyIrisRadius", ClampMin = "0.02", ClampMax = "0.6"))
+	float PolyIrisRadius = 0.10f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇强度 ChromaFanIntensity", ToolTip = "彩虹扇形光束（水平方向展开，逐条光谱染色）；0 = 关", ClampMin = "0", ClampMax = "8"))
+	float FanIntensity = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇条数 FanCount", ClampMin = "3", ClampMax = "12", ClampType = "int"))
+	int32 FanCount = 7;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇张角 FanSpread", ClampMin = "5", ClampMax = "120"))
+	float FanSpread = 40.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇半径 FanRadius", ClampMin = "0.03", ClampMax = "0.6"))
+	float FanRadius = 0.18f;
+
 	// ---------------- 星芒 Glare ----------------
 
 	UPROPERTY(EditAnywhere, Config, Category = "星芒 Glare", meta = (DisplayName = "启用星芒 GlareEnabled"))

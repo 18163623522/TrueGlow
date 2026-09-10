@@ -65,6 +65,20 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.HaloIntensity = 0.0f;
 	S.HaloRadius = 0.12f;
 	S.FlareTint = FLinearColor(1, 1, 1, 1);
+	S.bStarFilter = false;
+	S.StarFilterIntensity = 0.8f;
+	S.StarFilterRays = 4;
+	S.StarFilterRotation = 15.0f;
+	S.StarFilterLength = 720.0f;
+	S.StarFilterTint = FLinearColor(1, 1, 1, 1);
+	S.PolyIrisIntensity = 0.0f;
+	S.PolyIrisSides = 6;
+	S.PolyIrisRotation = 0.0f;
+	S.PolyIrisRadius = 0.10f;
+	S.FanIntensity = 0.0f;
+	S.FanCount = 7;
+	S.FanSpread = 40.0f;
+	S.FanRadius = 0.18f;
 
 	S.bGlareEnabled = true;
 	S.GlareTint = FLinearColor(1, 1, 1, 1);
@@ -99,6 +113,10 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 		S.ChromaticDispersion = 0.30f;
 		S.GhostIntensity = 0.35f;         // 幻影+光环
 		S.HaloIntensity = 0.20f;
+		S.bStarFilter = true;            // 星芒镜
+		S.StarFilterIntensity = 0.6f;
+		S.PolyIrisIntensity = 0.4f;      // 六边形光圈
+		S.FanIntensity = 0.3f;           // 光谱扇
 		S.bLensDirt = true;               // 脏镜头
 		S.LensDirtIntensity = 0.8f;
 		S.FilmSoftIntensity = 0.50f;

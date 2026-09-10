@@ -21,10 +21,34 @@ float GhostIntensity;
 float HaloRadius;     // UV 单位
 float HaloIntensity;
 
+// 光圈光效（Optical Flares / Knoll Light Factory 风格）
+uint PolyIrisSides;   // 光圈边数 5-9
+float PolyIrisRotation;
+float PolyIrisRadius; // UV 单位
+float PolyIrisIntensity;
+uint FanCount;        // 光谱扇条数
+float FanSpread;      // 扇形张角（度）
+float FanRadius;      // UV 单位
+float FanIntensity;
+
+Texture2D AccumTexture;   // 星芒镜链累加输入
+SamplerState AccumSampler;
+float AccumWeight;
+
 float3 SampleBright(float2 UVm)
 {
 	return Texture2DSampleLevel(InputTexture, InputSampler,
 		clamp(UVm, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0).rgb;
+}
+
+// 光谱色（t: 0..1 → 紫-蓝-绿-黄-红 循环近似）
+float3 SpectrumRGB(float t)
+{
+	const float P = t * 6.2831853;
+	return saturate(float3(
+		0.5 + 0.5 * cos(P - 0.0),
+		0.5 + 0.5 * cos(P - 2.0944),
+		0.5 + 0.5 * cos(P - 4.1888)));
 }
 
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
@@ -67,5 +91,47 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		Halo *= saturate(dot(ToC, ToC) * 4.0) * HaloIntensity; // 中心区域有效
 	}
 
-	OutColor = float4(GhostSum + Halo, 0.0);
+	float3 Result = GhostSum + Halo;
+
+	// ---- Poly Iris 多边形光圈环（光圈叶片形状，光谱染色）----
+	if (PolyIrisIntensity > 0.001)
+	{
+		const uint Sides = max(PolyIrisSides, 3);
+		const float Seg = 6.2831853 / float(Sides);
+		float3 IrisSum = float3(0, 0, 0);
+		const uint IrisTaps = 24;
+		for (uint it = 0; it < IrisTaps; ++it)
+		{
+			const float A = float(it) / float(IrisTaps) * 6.2831853 + PolyIrisRotation * 0.0174533;
+			const float Ang = fmod(A + Seg * 0.5, Seg) - Seg * 0.5;
+			const float PR = PolyIrisRadius / max(cos(Ang), 0.25);   // 多边形外边界
+			const float2 Off = float2(cos(A), sin(A)) * PR;
+			IrisSum += SampleBright(UV + Off) * SpectrumRGB(float(it) / float(IrisTaps));
+		}
+		Result += IrisSum * (PolyIrisIntensity / float(IrisTaps)) * saturate(dot(ToC, ToC) * 3.0);
+	}
+
+	// ---- Chroma Fan 光谱扇（彩虹扇形光束，围绕水平方向展开）----
+	if (FanIntensity > 0.001)
+	{
+		const uint FC = max(FanCount, 1);
+		float3 FanSum = float3(0, 0, 0);
+		for (uint fc = 0; fc < FC; ++fc)
+		{
+			const float T = (FC == 1) ? 0.5 : float(fc) / float(FC - 1);
+			const float AngDeg = -FanSpread * 0.5 + FanSpread * T;
+			const float2 Dir = float2(cos(AngDeg * 0.0174533), sin(AngDeg * 0.0174533));
+			FanSum += SampleBright(UV + Dir * FanRadius) * SpectrumRGB(T);
+		}
+		Result += FanSum * (FanIntensity / float(FC)) * saturate(dot(ToC, ToC) * 3.0);
+	}
+
+	// ---- 星芒镜链累加 ----
+	if (AccumWeight > 0.001)
+	{
+		Result += Texture2DSampleLevel(AccumTexture, AccumSampler,
+			clamp(UV, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0).rgb * AccumWeight;
+	}
+
+	OutColor = float4(Result, 0.0);
 }

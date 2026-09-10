@@ -78,6 +78,20 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.HaloIntensity = FMath::Max(0.0f, HaloIntensity);
 	P.HaloRadius = FMath::Clamp(HaloRadius, 0.02f, 0.6f);
 	P.FlareTint = FlareTint;
+	P.bStarFilter = bStarFilter;
+	P.StarFilterIntensity = FMath::Max(0.0f, StarFilterIntensity);
+	P.StarFilterRays = FMath::Clamp(StarFilterRays, 4, 8);
+	P.StarFilterRotation = StarFilterRotation;
+	P.StarFilterLength = FMath::Max(4.0f, StarFilterLength);
+	P.StarFilterTint = StarFilterTint;
+	P.PolyIrisIntensity = FMath::Max(0.0f, PolyIrisIntensity);
+	P.PolyIrisSides = FMath::Clamp(PolyIrisSides, 5, 9);
+	P.PolyIrisRotation = PolyIrisRotation;
+	P.PolyIrisRadius = FMath::Clamp(PolyIrisRadius, 0.02f, 0.6f);
+	P.FanIntensity = FMath::Max(0.0f, FanIntensity);
+	P.FanCount = FMath::Clamp(FanCount, 3, 12);
+	P.FanSpread = FMath::Clamp(FanSpread, 5.0f, 120.0f);
+	P.FanRadius = FMath::Clamp(FanRadius, 0.03f, 0.6f);
 
 	P.bGlareEnabled = bGlareEnabled;
 	P.GlareIntensity = FMath::Max(0.0f, GlareIntensity);

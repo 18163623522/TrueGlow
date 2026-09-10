@@ -74,6 +74,26 @@ struct FTrueGlowParams
 	float HaloRadius = 0.12f;       // 光环半径（UV 比例）
 	FLinearColor FlareTint = FLinearColor(1, 1, 1, 1);
 
+	// 星芒镜 Star Filter（Optical Flares/Knoll 风格：多条任意角度长芒，Mip 级联无断层）
+	bool bStarFilter = false;
+	float StarFilterIntensity = 0.8f;
+	int32 StarFilterRays = 4;        // 芒数 4/6/8
+	float StarFilterRotation = 15.0f; // 旋转角（度）
+	float StarFilterLength = 720.0f;  // 像素@1080
+	FLinearColor StarFilterTint = FLinearColor(1, 1, 1, 1);
+
+	// 多边形光圈 Poly Iris（光圈叶片形状光斑，光谱染色）
+	float PolyIrisIntensity = 0.0f;
+	int32 PolyIrisSides = 6;
+	float PolyIrisRotation = 0.0f;
+	float PolyIrisRadius = 0.10f;
+
+	// 光谱扇 Chroma Fan（彩虹扇形光束）
+	float FanIntensity = 0.0f;
+	int32 FanCount = 7;
+	float FanSpread = 40.0f;
+	float FanRadius = 0.18f;
+
 	// Glare（星芒）
 	bool bGlareEnabled = true;
 	float GlareIntensity = 0.25f;
