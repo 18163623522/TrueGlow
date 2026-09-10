@@ -54,6 +54,9 @@ void UTrueGlowBlueprintLibrary::SetStarFilterIntensity(float InIntensity) { S()-
 void UTrueGlowBlueprintLibrary::SetPolyIrisIntensity(float InIntensity) { S()->PolyIrisIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetFanIntensity(float InIntensity) { S()->FanIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetHaloIntensity(float InIntensity) { S()->HaloIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetGodRaysEnabled(bool bInEnabled) { S()->bGodRays = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetGodRaysIntensity(float InIntensity) { S()->GodRaysIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetGodRaysLightPosition(FVector2D InScreenPos) { S()->GodRaysLightPos = InScreenPos; }
 void UTrueGlowBlueprintLibrary::SetGlareEnabled(bool bInEnabled) { S()->bGlareEnabled = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetGlareIntensity(float InIntensity) { S()->GlareIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetGlareTint(FLinearColor InTint) { S()->GlareTint = InTint; }

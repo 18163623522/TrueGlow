@@ -223,6 +223,29 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇半径 FanRadius", ClampMin = "0.03", ClampMax = "0.6"))
 	float FanRadius = 0.18f;
 
+	// ---------------- 光束 GodRays ----------------
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "启用光束 GodRays", ToolTip = "屏幕空间径向体积光束（光源放射状光柱，Trapcode Shine 式）；光源位置可由蓝图按太阳投影实时驱动"))
+	bool bGodRays = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光束强度 GodRaysIntensity", EditCondition = "bGodRays", ClampMin = "0", ClampMax = "20"))
+	float GodRaysIntensity = 1.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光源屏幕位置 GodRaysLightPos", EditCondition = "bGodRays"))
+	FVector2D GodRaysLightPos = FVector2D(0.5f, 0.35f);
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光束长度 GodRaysLength", EditCondition = "bGodRays", ClampMin = "0.05", ClampMax = "1"))
+	float GodRaysLength = 0.9f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光束衰减 GodRaysDecay", EditCondition = "bGodRays", ClampMin = "0.8", ClampMax = "0.999"))
+	float GodRaysDecay = 0.965f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光束密度 GodRaysDensity", EditCondition = "bGodRays", ClampMin = "0.3", ClampMax = "3"))
+	float GodRaysDensity = 1.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "光束 GodRays", meta = (DisplayName = "光束颜色 GodRaysTint", EditCondition = "bGodRays", ToolTip = "白色 = 保留源色"))
+	FLinearColor GodRaysTint = FLinearColor(1, 1, 1, 1);
+
 	// ---------------- 星芒 Glare ----------------
 
 	UPROPERTY(EditAnywhere, Config, Category = "星芒 Glare", meta = (DisplayName = "启用星芒 GlareEnabled"))

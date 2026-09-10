@@ -565,6 +565,33 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	}
 
 	// ------------------------------------------------------------------
+	// 4''') 光束 GodRays：屏幕空间径向体积光（源 = 亮部基底，½ 分辨率）
+	FRDGTextureRef GodRaysResult = BlackDummy;
+	if (P.bGodRays && P.GodRaysIntensity > 0.001f && StreakBase)
+	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowFlare);
+		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.GodRays"));
+
+		FTrueGlowGodRaysPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowGodRaysPS::FParameters>();
+		Prm->Input = GetExactViewportParams(QuarterSize);
+		Prm->Output = GetExactViewportParams(QuarterSize);
+		Prm->InputTexture = StreakBase;
+		Prm->InputSampler = BilinearClampSampler;
+		Prm->LightPos = P.GodRaysLightPos;
+		Prm->RayLength = P.GodRaysLength;
+		Prm->Decay = P.GodRaysDecay;
+		Prm->Density = P.GodRaysDensity;
+		Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
+
+		TShaderMapRef<FTrueGlowGodRaysPS> Shader(ShaderMap);
+		FPixelShaderUtils::AddFullscreenPass(
+			GraphBuilder, ShaderMap,
+			RDG_EVENT_NAME("TrueGlow.GodRays %dx%d", QuarterSize.X, QuarterSize.Y),
+			Shader, Prm, FIntRect(FIntPoint::ZeroValue, QuarterSize));
+		GodRaysResult = Target;
+	}
+
+	// ------------------------------------------------------------------
 	// 5) 全分辨率合成（输出纹理与视图等尺寸，ViewRect 重定为全幅）
 	FRDGTextureRef OutTexture = CreateGlowTexture(GraphBuilder, FullSize, TEXT("TrueGlow.SceneColorOut"));
 	{
@@ -613,6 +640,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->FlareSampler = BilinearClampSampler;
 		Prm->FlareTint = ToTint4(P.FlareTint);
 		Prm->FlareIntensity = (P.GhostIntensity > 0.001f || P.HaloIntensity > 0.001f || P.PolyIrisIntensity > 0.001f || P.FanIntensity > 0.001f || P.bStarFilter) ? 1.0f : 0.0f;
+		Prm->GodRaysTexture = GodRaysResult;
+		Prm->GodRaysSampler = BilinearClampSampler;
+		Prm->GodRaysTint = ToTint4(P.GodRaysTint);
+		Prm->GodRaysIntensity = (P.bGodRays && StreakBase) ? FMath::Max(0.0f, P.GodRaysIntensity) : 0.0f;
 		Prm->RenderTargets[0] = FRenderTargetBinding(OutTexture, ERenderTargetLoadAction::ENoAction);
 
 		TShaderMapRef<FTrueGlowCompositePS> Shader(ShaderMap);

@@ -93,6 +93,14 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.FanSpread = FMath::Clamp(FanSpread, 5.0f, 120.0f);
 	P.FanRadius = FMath::Clamp(FanRadius, 0.03f, 0.6f);
 
+	P.bGodRays = bGodRays;
+	P.GodRaysIntensity = FMath::Max(0.0f, GodRaysIntensity);
+	P.GodRaysLightPos = FVector2D(FMath::Clamp(GodRaysLightPos.X, -0.5f, 1.5f), FMath::Clamp(GodRaysLightPos.Y, -0.5f, 1.5f));
+	P.GodRaysLength = FMath::Clamp(GodRaysLength, 0.05f, 1.0f);
+	P.GodRaysDecay = FMath::Clamp(GodRaysDecay, 0.8f, 0.999f);
+	P.GodRaysDensity = FMath::Clamp(GodRaysDensity, 0.3f, 3.0f);
+	P.GodRaysTint = GodRaysTint;
+
 	P.bGlareEnabled = bGlareEnabled;
 	P.GlareIntensity = FMath::Max(0.0f, GlareIntensity);
 	P.GlareTint = GlareTint;

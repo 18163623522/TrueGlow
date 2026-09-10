@@ -63,6 +63,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetPolyIrisIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetFanIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Flare") static void SetHaloIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysEnabled(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysLightPosition(FVector2D InScreenPos);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareEnabled(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareTint(FLinearColor InTint);

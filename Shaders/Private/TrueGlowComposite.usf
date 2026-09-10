@@ -49,6 +49,11 @@ SamplerState FlareSampler;
 float4 FlareTint;
 float FlareIntensity;
 
+Texture2D GodRaysTexture;
+SamplerState GodRaysSampler;
+float4 GodRaysTint;
+float GodRaysIntensity;
+
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
 	const float2 UV = SvPosition.xy * Output_ExtentInverse;
@@ -97,7 +102,8 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		+ TrueGlowApplyTint(StreakColor, StreakTint.rgb,  StreakIntensity)
 		+ TrueGlowApplyTint(Texture2DSampleLevel(StreakTexture2, Streak2Sampler, UV, 0).rgb, Streak2Tint.rgb, Streak2Intensity)
 		+ TrueGlowApplyTint(Texture2DSampleLevel(GlareTexture,   GlareSampler,   UV, 0).rgb, GlareTint.rgb,   GlareIntensity)
-		+ TrueGlowApplyTint(Texture2DSampleLevel(FlareTexture,   FlareSampler,   UV, 0).rgb, FlareTint.rgb,   FlareIntensity);
+		+ TrueGlowApplyTint(Texture2DSampleLevel(FlareTexture,   FlareSampler,   UV, 0).rgb, FlareTint.rgb,   FlareIntensity)
+		+ TrueGlowApplyTint(Texture2DSampleLevel(GodRaysTexture, GodRaysSampler, UV, 0).rgb, GodRaysTint.rgb, GodRaysIntensity);
 
 	// ---- 脏镜头光晕：程序化污渍调制整体辉光 ----
 	if (LensDirtIntensity > 0.001)

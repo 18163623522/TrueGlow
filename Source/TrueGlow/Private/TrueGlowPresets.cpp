@@ -58,6 +58,14 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.StreakVerticalIntensity = 0.25f;
 	S.StreakVerticalLength = 240.0f;
 
+	S.bGodRays = false;
+	S.GodRaysIntensity = 1.0f;
+	S.GodRaysLightPos = FVector2D(0.5f, 0.35f);
+	S.GodRaysLength = 0.9f;
+	S.GodRaysDecay = 0.965f;
+	S.GodRaysDensity = 1.0f;
+	S.GodRaysTint = FLinearColor(1, 1, 1, 1);
+
 	S.GhostIntensity = 0.0f;
 	S.GhostCount = 4;
 	S.GhostSpacing = 0.45f;

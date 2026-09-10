@@ -94,6 +94,15 @@ struct FTrueGlowParams
 	float FanSpread = 40.0f;
 	float FanRadius = 0.18f;
 
+	// 光束 GodRays（屏幕空间径向体积光，AE Trapcode Shine 式）
+	bool bGodRays = false;
+	float GodRaysIntensity = 1.0f;   // 强度
+	FVector2D GodRaysLightPos = FVector2D(0.5f, 0.35f); // 光源屏幕位置（0-1，可由蓝图按太阳投影驱动）
+	float GodRaysLength = 0.9f;      // 采样长度（0.05-1）
+	float GodRaysDecay = 0.965f;     // 逐采样衰减（0.8-0.999）
+	float GodRaysDensity = 1.0f;     // 采样密度（0.3-3）
+	FLinearColor GodRaysTint = FLinearColor(1, 1, 1, 1);
+
 	// Glare（星芒）
 	bool bGlareEnabled = true;
 	float GlareIntensity = 0.25f;

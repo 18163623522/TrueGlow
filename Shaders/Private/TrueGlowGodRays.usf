@@ -1,0 +1,58 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 屏幕空间径向体积光束（God Rays / Trapcode Shine 式）：
+// 从每个像素沿「像素 → 光源屏幕位置」方向迭代采样亮部纹理，指数衰减累加。
+// 起点加交错梯度噪声抖动，消除径向条带。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float2 LightPos;    // 光源屏幕位置（0-1，可出屏）
+float RayLength;    // 采样总长（0.05-1，占屏距比例）
+float Decay;        // 逐采样衰减
+float Density;      // 采样密度（步距缩放）
+
+float SampleBrightLum(float2 UVm)
+{
+	float3 C = Texture2DSampleLevel(InputTexture, InputSampler,
+		clamp(UVm, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0).rgb;
+	return dot(C, float3(0.299, 0.587, 0.114));
+}
+
+// 交错梯度噪声（抖动去条带）
+float InterleavedGradientNoise(float2 P)
+{
+	return frac(52.9829189 * frac(dot(P, float2(0.06711056, 0.00583715))));
+}
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	float2 UV = SvPosition.xy * Output_ExtentInverse;
+
+	const int Steps = 48;
+	const float Jitter = InterleavedGradientNoise(SvPosition.xy) - 0.5;
+
+	float2 Dir = (LightPos - UV) * (RayLength / float(Steps)) * Density;
+	float2 P = UV + Dir * Jitter;   // 起点抖动
+
+	float Illum = 1.0;
+	float Accum = 0.0;
+
+	for (int k = 0; k < Steps; ++k)
+	{
+		Accum += SampleBrightLum(P) * Illum;
+		P += Dir;
+		Illum *= Decay;
+	}
+
+	// 能量归一后乘强度（强度由 C++ 侧合入 tint）
+	float Result = Accum * (1.0 - Decay) / (1.0 - pow(Decay, Steps)) / 6.0;
+
+	OutColor = float4(Result.xxx, 0.0);
+}

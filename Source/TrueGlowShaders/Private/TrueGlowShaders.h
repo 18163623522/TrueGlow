@@ -209,6 +209,10 @@ public:
 		SHADER_PARAMETER_SAMPLER(SamplerState, FlareSampler)
 		SHADER_PARAMETER(FVector4, FlareTint)
 		SHADER_PARAMETER(float, FlareIntensity)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, GodRaysTexture)
+		SHADER_PARAMETER_SAMPLER(SamplerState, GodRaysSampler)
+		SHADER_PARAMETER(FVector4, GodRaysTint)
+		SHADER_PARAMETER(float, GodRaysIntensity)
 		RENDER_TARGET_BINDING_SLOTS()
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -305,5 +309,33 @@ public:
 };
 
 IMPLEMENT_GLOBAL_SHADER(FTrueGlowFlarePS, "/Plugin/TrueGlow/Private/TrueGlowFlare.usf", "MainPS", SF_Pixel);
+
+// ---------------------------------------------------------------------------
+// 10) 光束 GodRays：屏幕空间径向体积光
+class FTrueGlowGodRaysPS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FTrueGlowGodRaysPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowGodRaysPS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Output)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, InputTexture)
+		SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)
+		SHADER_PARAMETER(FVector2D, LightPos)
+		SHADER_PARAMETER(float, RayLength)
+		SHADER_PARAMETER(float, Decay)
+		SHADER_PARAMETER(float, Density)
+		RENDER_TARGET_BINDING_SLOTS()
+	END_SHADER_PARAMETER_STRUCT()
+
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return true;
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowGodRaysPS, "/Plugin/TrueGlow/Private/TrueGlowGodRays.usf", "MainPS", SF_Pixel);
 
 #endif // KG_SHADERS_ENABLED
