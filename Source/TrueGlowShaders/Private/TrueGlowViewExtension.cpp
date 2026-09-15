@@ -274,7 +274,8 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->Growth = Growth;
 		Prm->Taps = MipTaps;
 		Prm->Attenuation = P.StreakAttenuation;
-		Prm->AccumTexture = AccumSrc;
+		// RDG 要求绑定参数非空：无累加源时用黑纹理占位（AccumMul=0 时着色器分支不产生贡献）
+		Prm->AccumTexture = AccumSrc ? AccumSrc : BlackDummy;
 		Prm->AccumSampler = BilinearClampSampler;
 		Prm->AccumMul = FVector4(AccumMul.R, AccumMul.G, AccumMul.B, 1.0f);
 		Prm->SelfTint = FVector4(SelfTint.R, SelfTint.G, SelfTint.B, 1.0f);
@@ -546,7 +547,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 			Prm->FanSpread = P.FanSpread;
 			Prm->FanRadius = P.FanRadius;
 			Prm->FanIntensity = P.FanIntensity;
-			Prm->AccumTexture = StarAccum;
+			Prm->AccumTexture = StarAccum ? StarAccum : BlackDummy;
 			Prm->AccumSampler = BilinearClampSampler;
 			Prm->AccumWeight = StarAccum ? FMath::Max(0.0f, P.StarFilterIntensity) : 0.0f;
 			Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
