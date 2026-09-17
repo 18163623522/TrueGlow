@@ -15,6 +15,15 @@ enum class ETrueGlowPreset : uint8
 	Subtle UMETA(DisplayName = "Subtle 克制柔和"),
 };
 
+UENUM()
+enum class ETrueGlowKernelShape : uint8
+{
+	Gaussian UMETA(DisplayName = "高斯 Gaussian（分离卷积）"),
+	Disc     UMETA(DisplayName = "圆盘 Disc（bokeh 虚化圈）"),
+	Hexagon  UMETA(DisplayName = "六边形 Hexagon（光圈形状）"),
+	Cross    UMETA(DisplayName = "十字 Cross"),
+};
+
 /**
  * TrueGlow 全局配置。
  * 注意：故意不继承 UDeveloperSettings——插件运行时模块在 Default 相位加载，
@@ -72,6 +81,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "高斯柔化迭代 GaussianIterations", ToolTip = "每级 H/V 高斯的迭代数：2 = 更柔更接近真实高斯（帧率敏感时改 1）", ClampMin = "1", ClampMax = "3", ClampType = "int"))
 	int32 GaussianIterations = 2;
+
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "卷积核形状 KernelShape", ToolTip = "每级模糊的卷积核形状：高斯=默认分离卷积；圆盘/六边形/十字=bokeh 光圈形状核（3 环×8 tap 整形 pass，在高斯之后混合）"))
+	ETrueGlowKernelShape BloomKernelShape = ETrueGlowKernelShape::Gaussian;
+
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "形状混合 ShapeMix", ToolTip = "形状核与高斯的混合量：0 = 纯高斯，1 = 全形状核（bokeh 感最强）", ClampMin = "0", ClampMax = "1"))
+	float BloomShapeMix = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "形状核半径 ShapeRadius", ToolTip = "形状核半径（texel/级；越粗的级等效屏幕半径越大，bokeh 圈由粗级主导）", ClampMin = "1", ClampMax = "16"))
+	float BloomShapeRadius = 8.0f;
 
 	// ---------------- 电影质感 Cinematic ----------------
 

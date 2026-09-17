@@ -24,6 +24,9 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.BloomBlurRadius = 3.0f;
 	S.GaussianIterations = 2;
 	S.bBloomFastMode = false;
+	S.BloomKernelShape = ETrueGlowKernelShape::Gaussian;
+	S.BloomShapeMix = 0.0f;
+	S.BloomShapeRadius = 8.0f;
 	S.ChromaticDispersion = 0.18f;
 	S.bLensDirt = false;
 	S.LensDirtIntensity = 1.0f;

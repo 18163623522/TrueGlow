@@ -33,6 +33,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomFastMode(bool bInFast);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomScale(FVector2D InScale);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetGaussianIterations(int32 InIterations);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomKernelShape(ETrueGlowKernelShape InShape);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomShapeMix(float InMix);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetBloomShapeRadius(float InRadius);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Bloom") static void SetChromaticDispersion(float InDispersion);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetFilmSoftIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Cinematic") static void SetFilmSoftRadius(float InRadius);

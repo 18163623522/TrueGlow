@@ -34,6 +34,9 @@ void UTrueGlowBlueprintLibrary::SetStreakTint(FLinearColor InTint) { S()->Streak
 void UTrueGlowBlueprintLibrary::SetStreakOwnThreshold(bool bInEnabled) { S()->bStreakOwnThreshold = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetStreakThreshold(float InThreshold) { S()->StreakThreshold = FMath::Max(0.0f, InThreshold); }
 void UTrueGlowBlueprintLibrary::SetGaussianIterations(int32 InIterations) { S()->GaussianIterations = FMath::Clamp(InIterations, 1, 2); }
+void UTrueGlowBlueprintLibrary::SetBloomKernelShape(ETrueGlowKernelShape InShape) { S()->BloomKernelShape = InShape; }
+void UTrueGlowBlueprintLibrary::SetBloomShapeMix(float InMix) { S()->BloomShapeMix = FMath::Clamp(InMix, 0.0f, 1.0f); }
+void UTrueGlowBlueprintLibrary::SetBloomShapeRadius(float InRadius) { S()->BloomShapeRadius = FMath::Clamp(InRadius, 1.0f, 16.0f); }
 void UTrueGlowBlueprintLibrary::SetChromaticDispersion(float InDispersion) { S()->ChromaticDispersion = FMath::Clamp(InDispersion, 0.0f, 1.0f); }
 void UTrueGlowBlueprintLibrary::SetFilmSoftIntensity(float InIntensity) { S()->FilmSoftIntensity = FMath::Clamp(InIntensity, 0.0f, 2.0f); }
 void UTrueGlowBlueprintLibrary::SetFilmSoftRadius(float InRadius) { S()->FilmSoftRadius = FMath::Clamp(InRadius, 1.0f, 8.0f); }

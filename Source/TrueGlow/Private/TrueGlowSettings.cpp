@@ -18,6 +18,9 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.BloomLevels = FMath::Clamp(BloomLevels, 1, 8);
 	P.BloomBlurRadius = FMath::Max(0.0f, BloomBlurRadius);
 	P.GaussianIterations = FMath::Clamp(GaussianIterations, 1, 3);
+	P.BloomKernelShape = static_cast<int32>(BloomKernelShape);
+	P.BloomShapeMix = FMath::Clamp(BloomShapeMix, 0.0f, 1.0f);
+	P.BloomShapeRadius = FMath::Clamp(BloomShapeRadius, 1.0f, 16.0f);
 	P.ChromaticDispersion = FMath::Max(0.0f, ChromaticDispersion);
 	P.bLensDirt = bLensDirt;
 	P.LensDirtIntensity = FMath::Max(0.0f, LensDirtIntensity);

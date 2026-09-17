@@ -353,6 +353,41 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 			}
 		}
 
+		// 卷积核形状整形（bokeh 圆盘/六边形/十字）：高斯之后逐级向形状核混合。
+		// 3 环×8 tap 等效形状卷积；最细的几级分辨率过低体现不出形状，跳过。
+		if (P.BloomKernelShape > 0 && P.BloomShapeMix > 0.001f && !P.bBloomFastMode)
+		{
+			const uint32 ShapeRadius = static_cast<uint32>(FMath::Clamp(FMath::RoundToInt(P.BloomShapeRadius), 1, 16));
+			const uint32 ShapeIndex = static_cast<uint32>(P.BloomKernelShape - 1);   // usf: 0=圆盘 1=六边形 2=十字
+			for (int32 i = 0; i < LevelCount; ++i)
+			{
+				if (LevelExtents[i].X < 16 || LevelExtents[i].Y < 16)
+				{
+					break;   // 级由细到粗排列，一旦低于 16px 后续更小
+				}
+				FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, LevelExtents[i],
+					*FString::Printf(TEXT("TrueGlow.Shape.L%d"), i));
+
+				FTrueGlowShapeBlurPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowShapeBlurPS::FParameters>();
+				Prm->Input = GetExactViewportParams(LevelExtents[i]);
+				Prm->Output = GetExactViewportParams(LevelExtents[i]);
+				Prm->InputTexture = LevelTextures[i];
+				Prm->InputSampler = BilinearClampSampler;
+				Prm->Radius = ShapeRadius;
+				Prm->Shape = ShapeIndex;
+				Prm->Mix = P.BloomShapeMix;
+				Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
+
+				TShaderMapRef<FTrueGlowShapeBlurPS> Shader(ShaderMap);
+				FPixelShaderUtils::AddFullscreenPass(
+					GraphBuilder, ShaderMap,
+					RDG_EVENT_NAME("TrueGlow.Shape.L%d %dx%d", i, LevelExtents[i].X, LevelExtents[i].Y),
+					Shader, Prm, FIntRect(FIntPoint::ZeroValue, LevelExtents[i]));
+
+				LevelTextures[i] = Target;
+			}
+		}
+
 		// tent 升采样合并：Coarse -> Fine
 		FRDGTextureRef Current = LevelTextures[LevelCount - 1];
 		for (int32 i = LevelCount - 2; i >= 0; --i)

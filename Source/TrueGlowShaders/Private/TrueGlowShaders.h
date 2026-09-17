@@ -338,4 +338,32 @@ public:
 
 IMPLEMENT_GLOBAL_SHADER(FTrueGlowGodRaysPS, "/Plugin/TrueGlow/Private/TrueGlowGodRays.usf", "MainPS", SF_Pixel);
 
+// ---------------------------------------------------------------------------
+// 11) 卷积核形状整形（bokeh 圆盘/六边形/十字）：3 环 × 8 tap 圆环采样 + 形状权函数，
+//     与高斯结果按 Mix 混合（等效对亮部做形状核卷积）
+class FTrueGlowShapeBlurPS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FTrueGlowShapeBlurPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowShapeBlurPS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Output)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, InputTexture)
+		SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)
+		SHADER_PARAMETER(uint32, Radius)
+		SHADER_PARAMETER(uint32, Shape)   // 0=圆盘 1=六边形 2=十字
+		SHADER_PARAMETER(float, Mix)
+		RENDER_TARGET_BINDING_SLOTS()
+	END_SHADER_PARAMETER_STRUCT()
+
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return true;
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowShapeBlurPS, "/Plugin/TrueGlow/Private/TrueGlowShapeBlur.usf", "MainPS", SF_Pixel);
+
 #endif // KG_SHADERS_ENABLED

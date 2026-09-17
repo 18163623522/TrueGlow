@@ -23,6 +23,9 @@ struct FTrueGlowParams
 	int32 BloomLevels = 6;          // 1..8
 	float BloomBlurRadius = 3.0f;   // 每级高斯半径（像素，0 = 关）
 	int32 GaussianIterations = 2;   // 1..2 每级 H/V 模糊迭代数（高斯感柔化）
+	int32 BloomKernelShape = 0;     // 卷积核形状：0=高斯（分离卷积） 1=圆盘 2=六边形 3=十字
+	float BloomShapeMix = 0.0f;     // 形状核混合量（0=纯高斯，1=全形状核）
+	float BloomShapeRadius = 8.0f;  // 形状核半径（texel/级；粗级分辨率低，等效屏幕半径逐级翻倍）
 	bool bBloomFastMode = false;    // 跳过每级高斯保帧率（REAL BLOOM 的 fast mode）
 	// 电影质感 Cinematic
 	float ChromaticDispersion = 0.18f; // 镜头色散：径向 RGB 分离的彩虹边（0=关）

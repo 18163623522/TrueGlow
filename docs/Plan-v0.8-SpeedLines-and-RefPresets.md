@@ -1,7 +1,21 @@
-# TrueGlow v0.8 计划 —— 速度线 SpeedLines + 参考图四预设
+# TrueGlow v0.8 计划 —— 速度线 SpeedLines + 参考图四预设 + 卷积核形状
 
-> 状态：待实施（本文档为实施蓝本，按里程碑逐步落地）
+> 状态：部分交付（2026-09-17：**卷积核形状已上线**、**启动崩溃已实证修复**；速度线与四预设待实施）
 > 前置：v0.7（GodRays，commit f5bbb71）已交付，12 效果管线全绿。
+
+## ✅ 已交付（2026-09-17）
+
+1. **启动崩溃修复（实证）**：历史崩溃 = 星芒镜给 StreakMipPS 加的可选 `AccumTexture`
+   在 null 时触发 4.26 RDG 入队校验 Fatal（"required shader parameter was not set"）。
+   修复（AccumSrc/StarAccum 两处 null 守卫绑 BlackDummy）已在 f5bbb71 内；本次用
+   星芒镜+光条全开配置真实 RHI 冒烟：`first AfterMotionBlur` 正常、0 Fatal、干净退出。
+2. **卷积核形状 KernelShape**：泛光每级高斯之后加形状整形 pass（TrueGlowShapeBlur.usf，
+   3 环×8 tap 圆环采样 + 圆盘/六边形/十字距离场加权，与高斯按 Mix 混合）。参数
+   `卷积核形状/形状混合/形状核半径` 三项进面板与蓝图（SetBloomKernelShape 等），
+   预设基线重置含此三项。三模块编译过；六边形核 0.7 混合冒烟：新着色器编译 1 个、
+   0 Fatal、枚举导入零警告。
+   （FFT 频域卷积+任意 PSF 为路 2，刻意不做：4.26 RDG 无公开 API 注册裸 UTexture2D、
+   循环卷积要 padding、D3D11 上工程量 5-10 倍而收益只在"真实镜头 PSF 复刻"。）
 
 ---
 

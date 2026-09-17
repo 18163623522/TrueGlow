@@ -1,0 +1,70 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 卷积核形状整形：把高斯结果向 bokeh 形状核（圆盘/六边形/十字）混合。
+// 3 环 × 8 tap 圆环采样（环间 22.5° 错位），tap 权重由形状距离场决定 → 等效形状核卷积。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D InputTexture;
+SamplerState InputSampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+uint Radius;
+uint Shape;   // 0=圆盘 1=六边形 2=十字
+float Mix;
+
+float ShapeWeight(float2 P /* 单位核空间 [-1,1] */)
+{
+	if (Shape == 0)
+	{
+		// 圆盘 bokeh：硬边 + 约 1/8 边宽羽化
+		return saturate((1.0 - length(P)) * 8.0);
+	}
+	else if (Shape == 1)
+	{
+		// 六边形光圈距离场
+		float2 Q = abs(P);
+		const float HexDist = max(Q.x * 0.8660254 + Q.y * 0.5, Q.y);
+		return saturate((1.0 - HexDist) * 8.0);
+	}
+	// 十字：双轴脊线
+	float2 Q = abs(P);
+	return max(exp(-Q.x * 5.0), exp(-Q.y * 5.0));
+}
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+
+	const float4 Base = Texture2DSampleLevel(InputTexture, InputSampler,
+		clamp(UV, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+
+	float4 Sum = float4(0.0, 0.0, 0.0, 0.0);
+	float WeightSum = 0.0;
+
+	[unroll]
+	for (int Ring = 0; Ring < 3; ++Ring)
+	{
+		const float RingR = 0.35 + 0.325 * Ring;   // 0.35 / 0.675 / 1.0
+		[unroll]
+		for (int A = 0; A < 8; ++A)
+		{
+			const float Ang = A * (PI / 4.0) + Ring * (PI / 8.0);
+			const float2 P = float2(cos(Ang), sin(Ang)) * RingR;
+			const float W = ShapeWeight(P);
+			if (W > 0.001)
+			{
+				const float2 Off = P * float(Radius) * Input_ExtentInverse;
+				Sum += W * Texture2DSampleLevel(InputTexture, InputSampler,
+					clamp(UV + Off, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax), 0);
+				WeightSum += W;
+			}
+		}
+	}
+
+	const float4 Shaped = Sum / max(WeightSum, 0.0001);
+	OutColor = lerp(Base, Shaped, saturate(Mix));
+}
