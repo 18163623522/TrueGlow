@@ -1,21 +1,36 @@
 # TrueGlow v0.8 计划 —— 速度线 SpeedLines + 参考图四预设 + 卷积核形状
 
-> 状态：部分交付（2026-09-17：**卷积核形状已上线**、**启动崩溃已实证修复**；速度线与四预设待实施）
+> 状态：**v0.8 全部交付**（2026-09-17：卷积核形状、速度线、参考图四预设、BloomLevels
+> 8 级修复、启动崩溃实证复核，全部编译+冒烟通过）
 > 前置：v0.7（GodRays，commit f5bbb71）已交付，12 效果管线全绿。
 
 ## ✅ 已交付（2026-09-17）
 
 1. **启动崩溃修复（实证）**：历史崩溃 = 星芒镜给 StreakMipPS 加的可选 `AccumTexture`
    在 null 时触发 4.26 RDG 入队校验 Fatal（"required shader parameter was not set"）。
-   修复（AccumSrc/StarAccum 两处 null 守卫绑 BlackDummy）已在 f5bbb71 内；本次用
-   星芒镜+光条全开配置真实 RHI 冒烟：`first AfterMotionBlur` 正常、0 Fatal、干净退出。
+   修复（AccumSrc/StarAccum 两处 null 守卫绑 BlackDummy）已在 f5bbb71 内；星芒镜+光条
+   全开配置真实 RHI 冒烟：`first AfterMotionBlur` 正常、0 Fatal、干净退出。
 2. **卷积核形状 KernelShape**：泛光每级高斯之后加形状整形 pass（TrueGlowShapeBlur.usf，
    3 环×8 tap 圆环采样 + 圆盘/六边形/十字距离场加权，与高斯按 Mix 混合）。参数
    `卷积核形状/形状混合/形状核半径` 三项进面板与蓝图（SetBloomKernelShape 等），
-   预设基线重置含此三项。三模块编译过；六边形核 0.7 混合冒烟：新着色器编译 1 个、
-   0 Fatal、枚举导入零警告。
+   预设基线重置含此三项。六边形核 0.7 混合冒烟：新着色器编译 1 个、0 Fatal、零警告。
    （FFT 频域卷积+任意 PSF 为路 2，刻意不做：4.26 RDG 无公开 API 注册裸 UTexture2D、
    循环卷积要 padding、D3D11 上工程量 5-10 倍而收益只在"真实镜头 PSF 复刻"。）
+3. **速度线 SpeedLines（§1 全量落地）**：TrueGlowSpeedLines.usf 单 pass 双层循环
+   （外层 k 条平行线源垂直偏移 + 内层 24 tap 几何级数 Mip 级联 + 每 tap 3 点垂直高斯
+   控线粗），8 参数（角度/根数/间距/长度/粗细/染色/强度/开关）+ 蓝图 SetSpeedLines* ×8；
+   方向像素空间构造宽高比安全；独立亮部基底（不依赖 streak 开启）；GPU stat
+   TrueGlow.SpeedLines。冒烟（速度线+星芒镜+8 级三路径同开）0 Fatal 零着色器错误。
+4. **参考图四预设（§2.1 表全量落地）**：能量蓝/弹道红/红日/科技蓝 + ApplyByName 别名
+   （energy/ballistic/redsun/tech）。弹道红 = 速度线唯一默认开启者。
+5. **BloomLevels 管线截断修复**：Clamp 1,6→1,8 + 金字塔临时数组 TInlineAllocator 6→8
+   + 蓝图 SetBloomLevels 同步 + 面板 tooltip 更新。
+
+**构建备注（编辑器占用时的编译定式）**：用户编辑器开着 → UBT 走热重载改名（-000N）。
+多次 -Module= 分模块构建会因后缀递增与动作历史冲突（"Unexpected conflict in renaming"）
+→ 定式：删 BuildEvents + 项目 Intermediate/Build/Win64/<Target> + 插件 Intermediate 后
+**单次整编**（不带 -Module），UBT 自动改写 UE4Editor.modules 指向 -0001，下次编辑器
+启动加载新构建。CrashReportClientEditor 残留进程会锁 DLL，先 taskkill。
 
 ---
 

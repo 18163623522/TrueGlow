@@ -1,0 +1,93 @@
+// Copyright pengxiwei. All Rights Reserved.
+
+// 速度线 SpeedLines：围绕亮源、沿任意角度的 N 条平行细线（弹道/速度线感）。
+// 单 pass 双层循环：外层平行线（源坐标垂直偏移 k·Spacing，逐条向外更短更淡），
+// 内层 24 tap 几何级数 + 按距选 Mip0..3（断层根治同款）；每 tap 3 点垂直高斯控线粗。
+// 方向在像素空间构造（DirPixel），屏幕上的斜率与角度参数一致、不被宽高比扭斜。
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/ScreenPass.ush"
+
+Texture2D StreakMip0;
+SamplerState StreakMip0Sampler;
+Texture2D StreakMip1;
+SamplerState StreakMip1Sampler;
+Texture2D StreakMip2;
+SamplerState StreakMip2Sampler;
+Texture2D StreakMip3;
+SamplerState StreakMip3Sampler;
+
+SCREEN_PASS_TEXTURE_VIEWPORT(Input)   // Mip0（¼ 分辨率）
+SCREEN_PASS_TEXTURE_VIEWPORT(Output)
+
+float2 DirPixel;      // 像素空间单位方向
+float D0;             // 起始距离（Mip0 texel）
+float MaxDist;        // 中心线长度（Mip0 texel）
+uint Taps;
+int HalfCount;        // k ∈ [-HalfCount, HalfCount]
+float SpacingTexels;  // 线间距（Mip0 texel）
+float Sigma;          // 线粗 σ（texel）
+
+float3 SampleSpeedMip(float2 UVm, int Mip)
+{
+	if (Mip <= 0) { return StreakMip0.SampleLevel(StreakMip0Sampler, UVm, 0).rgb; }
+	if (Mip == 1) { return StreakMip1.SampleLevel(StreakMip1Sampler, UVm, 0).rgb; }
+	if (Mip == 2) { return StreakMip2.SampleLevel(StreakMip2Sampler, UVm, 0).rgb; }
+	return StreakMip3.SampleLevel(StreakMip3Sampler, UVm, 0).rgb;
+}
+
+// 沿 DirUV 偏移 D 处的单个 tap：3 点垂直高斯（1,2,1)/4 控制线粗
+float3 TapLine(float2 BaseUV, float2 DirUV, float2 PerpUV, float D, float S)
+{
+	const int Mip = clamp(int(log2(max(D / 1.5, 1.0))), 0, 3);
+	const float2 Off = DirUV * D;
+	const float2 MN = Input_UVViewportBilinearMin;
+	const float2 MX = Input_UVViewportBilinearMax;
+	return (
+		  SampleSpeedMip(clamp(BaseUV + Off + PerpUV * S, MN, MX), Mip)
+		+ SampleSpeedMip(clamp(BaseUV + Off,           MN, MX), Mip) * 2.0
+		+ SampleSpeedMip(clamp(BaseUV + Off - PerpUV * S, MN, MX), Mip)
+		) * 0.25;
+}
+
+void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
+{
+	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+
+	const float2 Dir = normalize(DirPixel);          // 像素空间
+	const float2 Perp = float2(-Dir.y, Dir.x);
+	const float2 DirUV = Dir * Input_ExtentInverse;   // 1 texel 的 UV 步进
+	const float2 PerpUV = Perp * Input_ExtentInverse;
+
+	const int T = int(Taps);
+	const float InvT = 1.0 / float(T - 1);
+	const float S = max(Sigma, 0.25);
+
+	float3 Sum = float3(0, 0, 0);
+
+	for (int k = -HalfCount; k <= HalfCount; ++k)
+	{
+		const float ak = abs(float(k));
+		const float LineW = exp(-ak * 0.55);                      // 逐条变淡
+		const float LineLen = MaxDist * exp(-ak * 0.35);          // 逐条变短
+		const float Growth = pow(max(LineLen, D0 * 2.0) / D0, InvT);
+
+		// 第 k 条线的源采样位置：沿垂直方向平移 k·Spacing
+		const float2 SrcUV = clamp(UV + PerpUV * (float(k) * SpacingTexels),
+			Input_UVViewportBilinearMin, Input_UVViewportBilinearMax);
+
+		float3 LineSum = float3(0, 0, 0);
+		float LineWeight = 0.0;
+		for (int t = 0; t < T; ++t)
+		{
+			const float D = D0 * pow(Growth, float(t));
+			const float w = exp(-float(t) * InvT * 3.0);          // 沿线衰减
+			LineSum += w * (TapLine(SrcUV, DirUV, PerpUV, D, S) + TapLine(SrcUV, DirUV, PerpUV, -D, S));
+			LineWeight += 2.0 * w;
+		}
+
+		Sum += LineW * LineSum / max(LineWeight, 0.0001);
+	}
+
+	OutColor = float4(Sum, 0.0);
+}

@@ -69,12 +69,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysEnabled(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|GodRays") static void SetGodRaysLightPosition(FVector2D InScreenPos);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesEnabled(bool bInEnabled);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesIntensity(float InIntensity);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesAngle(float InAngleDegrees);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesCount(int32 InCount);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesSpacing(float InPx);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesLength(float InPx);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesThickness(float InPx);
+	UFUNCTION(BlueprintCallable, Category = "TrueGlow|SpeedLines") static void SetSpeedLinesTint(FLinearColor InTint);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareEnabled(bool bInEnabled);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareIntensity(float InIntensity);
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow|Glare") static void SetGlareTint(FLinearColor InTint);
 
 	// ---------------- 预设与工具 ----------------
-	/** 应用三套预设之一（WuWa/Neon/Subtle）。 */
+	/** 应用七套预设之一（WuWa/Neon/Subtle/EnergyBlue/BallisticRed/RedSun/TechBlue）。 */
 	UFUNCTION(BlueprintCallable, Category = "TrueGlow")
 	static void ApplyPreset(ETrueGlowPreset InPreset);
 

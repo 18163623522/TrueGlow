@@ -19,7 +19,7 @@ bool UTrueGlowBlueprintLibrary::IsEnabled() { return S()->bEnabled; }
 void UTrueGlowBlueprintLibrary::SetBloomEnabled(bool bInEnabled) { S()->bBloomEnabled = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetBloomIntensity(float InIntensity) { S()->BloomIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetBloomThreshold(float InThreshold) { S()->BloomThreshold = FMath::Max(0.0f, InThreshold); }
-void UTrueGlowBlueprintLibrary::SetBloomLevels(int32 InLevels) { S()->BloomLevels = FMath::Clamp(InLevels, 1, 6); }
+void UTrueGlowBlueprintLibrary::SetBloomLevels(int32 InLevels) { S()->BloomLevels = FMath::Clamp(InLevels, 1, 8); }
 void UTrueGlowBlueprintLibrary::SetBloomBrightMultiplier(float InMultiplier) { S()->BloomBrightMultiplier = FMath::Clamp(InMultiplier, 0.0f, 8.0f); }
 void UTrueGlowBlueprintLibrary::SetBloomFastMode(bool bInFast) { S()->bBloomFastMode = bInFast; }
 void UTrueGlowBlueprintLibrary::SetBloomScale(FVector2D InScale)
@@ -56,6 +56,15 @@ void UTrueGlowBlueprintLibrary::SetStarFilterEnabled(bool bInEnabled) { S()->bSt
 void UTrueGlowBlueprintLibrary::SetStarFilterIntensity(float InIntensity) { S()->StarFilterIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetPolyIrisIntensity(float InIntensity) { S()->PolyIrisIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetFanIntensity(float InIntensity) { S()->FanIntensity = FMath::Max(0.0f, InIntensity); }
+
+void UTrueGlowBlueprintLibrary::SetSpeedLinesEnabled(bool bInEnabled) { S()->bSpeedLines = bInEnabled; }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesIntensity(float InIntensity) { S()->SpeedLinesIntensity = FMath::Max(0.0f, InIntensity); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesAngle(float InAngleDegrees) { S()->SpeedLinesAngle = FMath::Clamp(InAngleDegrees, -90.0f, 90.0f); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesCount(int32 InCount) { S()->SpeedLinesCount = FMath::Clamp(InCount, 1, 16); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesSpacing(float InPx) { S()->SpeedLinesSpacing = FMath::Clamp(InPx, 2.0f, 64.0f); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesLength(float InPx) { S()->SpeedLinesLength = FMath::Clamp(InPx, 16.0f, 2000.0f); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesThickness(float InPx) { S()->SpeedLinesThickness = FMath::Clamp(InPx, 0.25f, 8.0f); }
+void UTrueGlowBlueprintLibrary::SetSpeedLinesTint(FLinearColor InTint) { S()->SpeedLinesTint = InTint; }
 void UTrueGlowBlueprintLibrary::SetHaloIntensity(float InIntensity) { S()->HaloIntensity = FMath::Max(0.0f, InIntensity); }
 void UTrueGlowBlueprintLibrary::SetGodRaysEnabled(bool bInEnabled) { S()->bGodRays = bInEnabled; }
 void UTrueGlowBlueprintLibrary::SetGodRaysIntensity(float InIntensity) { S()->GodRaysIntensity = FMath::Max(0.0f, InIntensity); }

@@ -13,6 +13,10 @@ enum class ETrueGlowPreset : uint8
 	WuWa   UMETA(DisplayName = "鸣潮 WuWa（默认推荐）"),
 	Neon   UMETA(DisplayName = "Neon 赛博夜景"),
 	Subtle UMETA(DisplayName = "Subtle 克制柔和"),
+	EnergyBlue  UMETA(DisplayName = "能量蓝 EnergyBlue"),
+	BallisticRed UMETA(DisplayName = "弹道红 BallisticRed"),
+	RedSun      UMETA(DisplayName = "红日 RedSun"),
+	TechBlue    UMETA(DisplayName = "科技蓝 TechBlue"),
 };
 
 UENUM()
@@ -73,7 +77,7 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "亮部提取增益 BrightMultiplier", ToolTip = "过阈值能量的倍率（bright-pass multiplier）", ClampMin = "0", ClampMax = "20"))
 	float BloomBrightMultiplier = 1.0f;
 
-	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "金字塔层数 Levels", ToolTip = "1-6 级，越多光晕越宽", ClampMin = "1", ClampMax = "8", ClampType = "int"))
+	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "金字塔层数 Levels", ToolTip = "1-8 级，越多光晕越宽", ClampMin = "1", ClampMax = "8", ClampType = "int"))
 	int32 BloomLevels = 6;
 
 	UPROPERTY(EditAnywhere, Config, Category = "泛光 Bloom", meta = (DisplayName = "每级模糊半径 BlurRadius", ToolTip = "每级高斯模糊半径（像素），0 = 关", ClampMin = "0", ClampMax = "16"))
@@ -240,6 +244,32 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "镜头光斑 Flare", meta = (DisplayName = "光谱扇半径 FanRadius", ClampMin = "0.03", ClampMax = "0.6"))
 	float FanRadius = 0.18f;
+
+	// ---------------- 速度线 SpeedLines ----------------
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "启用速度线 SpeedLines", ToolTip = "围绕高亮源、沿任意角度的 N 条平行细光（弹道/速度线感）；中心线最长最亮，向外逐条变短变淡"))
+	bool bSpeedLines = false;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线强度 SpeedLinesIntensity", EditCondition = "bSpeedLines", ClampMin = "0", ClampMax = "20"))
+	float SpeedLinesIntensity = 0.6f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线角度 SpeedLinesAngle", ToolTip = "线的角度（度）：0=水平，负值向右上倾斜；屏幕空间标定", EditCondition = "bSpeedLines", ClampMin = "-90", ClampMax = "90"))
+	float SpeedLinesAngle = -20.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线根数 SpeedLinesCount", ToolTip = "奇数为佳（中心线对称）", EditCondition = "bSpeedLines", ClampMin = "1", ClampMax = "16", ClampType = "int"))
+	int32 SpeedLinesCount = 5;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线间距 SpeedLinesSpacing", ToolTip = "相邻两线的间距（像素@1080）", EditCondition = "bSpeedLines", ClampMin = "2", ClampMax = "64"))
+	float SpeedLinesSpacing = 14.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线长度 SpeedLinesLength", ToolTip = "中心线长度（像素@1080），外圈线自动更短", EditCondition = "bSpeedLines", ClampMin = "16", ClampMax = "2000"))
+	float SpeedLinesLength = 520.0f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线粗细 SpeedLinesThickness", EditCondition = "bSpeedLines", ClampMin = "0.25", ClampMax = "8"))
+	float SpeedLinesThickness = 1.5f;
+
+	UPROPERTY(EditAnywhere, Config, Category = "速度线 SpeedLines", meta = (DisplayName = "速度线颜色 SpeedLinesTint", EditCondition = "bSpeedLines", ToolTip = "白色 = 保留源色"))
+	FLinearColor SpeedLinesTint = FLinearColor(1, 1, 1, 1);
 
 	// ---------------- 光束 GodRays ----------------
 

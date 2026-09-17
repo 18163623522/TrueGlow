@@ -20,6 +20,7 @@ DECLARE_GPU_STAT_NAMED(TrueGlowBloom, TEXT("TrueGlow.Bloom"));
 DECLARE_GPU_STAT_NAMED(TrueGlowStreak, TEXT("TrueGlow.Streak"));
 DECLARE_GPU_STAT_NAMED(TrueGlowGlare, TEXT("TrueGlow.Glare"));
 DECLARE_GPU_STAT_NAMED(TrueGlowFlare, TEXT("TrueGlow.Flare"));
+DECLARE_GPU_STAT_NAMED(TrueGlowSpeedLines, TEXT("TrueGlow.SpeedLines"));
 DECLARE_GPU_STAT_NAMED(TrueGlowComposite, TEXT("TrueGlow.Composite"));
 
 namespace
@@ -139,7 +140,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	const FScreenPassTextureViewportParameters SceneParams =
 		GetScreenPassTextureViewportParameters(FScreenPassTextureViewport(SceneColor));
 
-	const bool bNeedBright = P.bBloomEnabled || P.bStreakEnabled || P.bStreakVerticalEnabled || P.bGlareEnabled;
+	const bool bNeedBright = P.bBloomEnabled || P.bStreakEnabled || P.bStreakVerticalEnabled || P.bGlareEnabled || P.bSpeedLines;
 
 	RDG_EVENT_SCOPE(GraphBuilder, "TrueGlow");
 
@@ -212,7 +213,7 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	const bool bStreakFamily = P.bStreakEnabled || P.bStreakVerticalEnabled;
 	FRDGTextureRef QuarterBase = nullptr;
 	FRDGTextureRef StreakQuarterBase = nullptr;
-	if (bStreakFamily || P.bGlareEnabled)
+	if (bStreakFamily || P.bGlareEnabled || P.bSpeedLines)
 	{
 		if (P.bGlareEnabled || !P.bStreakOwnThreshold)
 		{
@@ -294,10 +295,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	if (P.bBloomEnabled)
 	{
 		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowBloom);
-		const int32 LevelCount = FMath::Clamp(P.BloomLevels, 1, 6);
+		const int32 LevelCount = FMath::Clamp(P.BloomLevels, 1, 8);
 
-		TArray<FRDGTextureRef, TInlineAllocator<6>> LevelTextures;
-		TArray<FIntPoint, TInlineAllocator<6>> LevelExtents;
+		TArray<FRDGTextureRef, TInlineAllocator<8>> LevelTextures;
+		TArray<FIntPoint, TInlineAllocator<8>> LevelExtents;
 		LevelTextures.Add(BrightHalf);
 		LevelExtents.Add(HalfSize);
 
@@ -551,6 +552,46 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	}
 
 	// ------------------------------------------------------------------
+	// 4'½) 速度线 SpeedLines：任意角度 N 条平行细线（弹道速度感，Mip 级联无断层）
+	FRDGTextureRef SpeedLinesResult = BlackDummy;
+	if (P.bSpeedLines && P.SpeedLinesIntensity > 0.001f && StreakBase)
+	{
+		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowSpeedLines);
+		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, QuarterSize, TEXT("TrueGlow.SpeedLines"));
+
+		const float HeightScale = static_cast<float>(QuarterSize.Y) / 1080.0f;
+		const float AngRad = P.SpeedLinesAngle * (PI / 180.0f);
+
+		FTrueGlowSpeedLinesPS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowSpeedLinesPS::FParameters>();
+		Prm->Input = GetExactViewportParams(QuarterSize);
+		Prm->Output = GetExactViewportParams(QuarterSize);
+		Prm->StreakMip0 = MipTex[0];
+		Prm->StreakMip0Sampler = BilinearClampSampler;
+		Prm->StreakMip1 = MipTex[1];
+		Prm->StreakMip1Sampler = BilinearClampSampler;
+		Prm->StreakMip2 = MipTex[2];
+		Prm->StreakMip2Sampler = BilinearClampSampler;
+		Prm->StreakMip3 = MipTex[3];
+		Prm->StreakMip3Sampler = BilinearClampSampler;
+		Prm->DirPixel = FVector2D(FMath::Cos(AngRad), FMath::Sin(AngRad));
+		Prm->D0 = 1.5f;
+		Prm->MaxDist = FMath::Max(4.0f, P.SpeedLinesLength * HeightScale);
+		Prm->Taps = 24;
+		Prm->HalfCount = FMath::Clamp(P.SpeedLinesCount, 1, 16) / 2;
+		Prm->SpacingTexels = FMath::Max(2.0f, P.SpeedLinesSpacing * HeightScale);
+		Prm->Sigma = FMath::Max(0.25f, P.SpeedLinesThickness * HeightScale);
+		Prm->RenderTargets[0] = FRenderTargetBinding(Target, ERenderTargetLoadAction::ENoAction);
+
+		TShaderMapRef<FTrueGlowSpeedLinesPS> Shader(ShaderMap);
+		FPixelShaderUtils::AddFullscreenPass(
+			GraphBuilder, ShaderMap,
+			RDG_EVENT_NAME("TrueGlow.SpeedLines %dx%d", QuarterSize.X, QuarterSize.Y),
+			Shader, Prm, FIntRect(FIntPoint::ZeroValue, QuarterSize));
+
+		SpeedLinesResult = Target;
+	}
+
+	// ------------------------------------------------------------------
 	// 4'') 镜头光斑：幻影 Ghost + 光环 Halo + 多边形光圈 + 光谱扇（含星芒镜累加）
 	FRDGTextureRef FlareResult = BlackDummy;
 	{
@@ -680,6 +721,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		Prm->GodRaysSampler = BilinearClampSampler;
 		Prm->GodRaysTint = ToTint4(P.GodRaysTint);
 		Prm->GodRaysIntensity = (P.bGodRays && StreakBase) ? FMath::Max(0.0f, P.GodRaysIntensity) : 0.0f;
+		Prm->SpeedLinesTexture = SpeedLinesResult;
+		Prm->SpeedLinesSampler = BilinearClampSampler;
+		Prm->SpeedLinesTint = ToTint4(P.SpeedLinesTint);
+		Prm->SpeedLinesIntensity = (P.bSpeedLines && StreakBase) ? FMath::Max(0.0f, P.SpeedLinesIntensity) : 0.0f;
 		Prm->RenderTargets[0] = FRenderTargetBinding(OutTexture, ERenderTargetLoadAction::ENoAction);
 
 		TShaderMapRef<FTrueGlowCompositePS> Shader(ShaderMap);

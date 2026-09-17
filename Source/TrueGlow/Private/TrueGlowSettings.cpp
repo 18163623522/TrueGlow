@@ -104,6 +104,15 @@ FTrueGlowParams UTrueGlowSettings::BuildParams() const
 	P.GodRaysDensity = FMath::Clamp(GodRaysDensity, 0.3f, 3.0f);
 	P.GodRaysTint = GodRaysTint;
 
+	P.bSpeedLines = bSpeedLines;
+	P.SpeedLinesIntensity = FMath::Max(0.0f, SpeedLinesIntensity);
+	P.SpeedLinesAngle = FMath::Clamp(SpeedLinesAngle, -90.0f, 90.0f);
+	P.SpeedLinesCount = FMath::Clamp(SpeedLinesCount, 1, 16);
+	P.SpeedLinesSpacing = FMath::Clamp(SpeedLinesSpacing, 2.0f, 64.0f);
+	P.SpeedLinesLength = FMath::Clamp(SpeedLinesLength, 16.0f, 2000.0f);
+	P.SpeedLinesThickness = FMath::Clamp(SpeedLinesThickness, 0.25f, 8.0f);
+	P.SpeedLinesTint = SpeedLinesTint;
+
 	P.bGlareEnabled = bGlareEnabled;
 	P.GlareIntensity = FMath::Max(0.0f, GlareIntensity);
 	P.GlareTint = GlareTint;

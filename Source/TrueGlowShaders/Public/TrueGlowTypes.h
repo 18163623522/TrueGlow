@@ -114,4 +114,14 @@ struct FTrueGlowParams
 	float GlareRadius1 = 24.0f;       // 短半径（像素）
 	float GlareRadius2 = 72.0f;       // 长半径（像素）
 	int32 GlareTaps = 6;              // 每方向每半径采样数
+
+	// 速度线 SpeedLines（弹道速度感：围绕亮源、任意角度的 N 条平行细线，Mip 级联无断层）
+	bool bSpeedLines = false;
+	float SpeedLinesIntensity = 0.6f;   // 强度
+	float SpeedLinesAngle = -20.0f;     // 角度（度，0=水平，屏幕空间）
+	int32 SpeedLinesCount = 5;          // 线数 1-16（奇数为佳，中心线对称）
+	float SpeedLinesSpacing = 14.0f;    // 相邻线间距（像素@1080）
+	float SpeedLinesLength = 520.0f;    // 中心线长度（像素@1080，向外逐条衰减）
+	float SpeedLinesThickness = 1.5f;   // 线粗（垂直高斯 σ，像素）
+	FLinearColor SpeedLinesTint = FLinearColor(1, 1, 1, 1);
 };

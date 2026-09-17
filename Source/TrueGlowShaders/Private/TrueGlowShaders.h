@@ -213,6 +213,10 @@ public:
 		SHADER_PARAMETER_SAMPLER(SamplerState, GodRaysSampler)
 		SHADER_PARAMETER(FVector4, GodRaysTint)
 		SHADER_PARAMETER(float, GodRaysIntensity)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, SpeedLinesTexture)
+		SHADER_PARAMETER_SAMPLER(SamplerState, SpeedLinesSampler)
+		SHADER_PARAMETER(FVector4, SpeedLinesTint)
+		SHADER_PARAMETER(float, SpeedLinesIntensity)
 		RENDER_TARGET_BINDING_SLOTS()
 	END_SHADER_PARAMETER_STRUCT()
 
@@ -365,5 +369,44 @@ public:
 };
 
 IMPLEMENT_GLOBAL_SHADER(FTrueGlowShapeBlurPS, "/Plugin/TrueGlow/Private/TrueGlowShapeBlur.usf", "MainPS", SF_Pixel);
+
+// ---------------------------------------------------------------------------
+// 12) 速度线 SpeedLines：围绕亮源、任意角度的 N 条平行细线（弹道速度感）
+//     单 pass 双层循环：外层平行线（源坐标垂直偏移 k·Spacing，逐条向外更短更淡），
+//     内层 24 tap 几何级数 + 按距选 Mip0..3（断层根治同款）；3-tap 垂直高斯控线粗
+class FTrueGlowSpeedLinesPS : public FGlobalShader
+{
+public:
+	DECLARE_GLOBAL_SHADER(FTrueGlowSpeedLinesPS);
+	SHADER_USE_PARAMETER_STRUCT(FTrueGlowSpeedLinesPS, FGlobalShader);
+
+	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Input)
+		SHADER_PARAMETER_STRUCT(FScreenPassTextureViewportParameters, Output)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakMip0)
+		SHADER_PARAMETER_SAMPLER(SamplerState, StreakMip0Sampler)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakMip1)
+		SHADER_PARAMETER_SAMPLER(SamplerState, StreakMip1Sampler)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakMip2)
+		SHADER_PARAMETER_SAMPLER(SamplerState, StreakMip2Sampler)
+		SHADER_PARAMETER_RDG_TEXTURE(Texture2D, StreakMip3)
+		SHADER_PARAMETER_SAMPLER(SamplerState, StreakMip3Sampler)
+		SHADER_PARAMETER(FVector2D, DirPixel)    // 像素空间单位方向（宽高比安全）
+		SHADER_PARAMETER(float, D0)
+		SHADER_PARAMETER(float, MaxDist)         // 中心线长度（Mip0 texel）
+		SHADER_PARAMETER(uint32, Taps)
+		SHADER_PARAMETER(int32, HalfCount)       // K = Count/2，k ∈ [-K, K]
+		SHADER_PARAMETER(float, SpacingTexels)   // 线间距（Mip0 texel）
+		SHADER_PARAMETER(float, Sigma)           // 线粗 σ（texel）
+		RENDER_TARGET_BINDING_SLOTS()
+	END_SHADER_PARAMETER_STRUCT()
+
+	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
+	{
+		return true;
+	}
+};
+
+IMPLEMENT_GLOBAL_SHADER(FTrueGlowSpeedLinesPS, "/Plugin/TrueGlow/Private/TrueGlowSpeedLines.usf", "MainPS", SF_Pixel);
 
 #endif // KG_SHADERS_ENABLED

@@ -69,6 +69,15 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 	S.GodRaysDensity = 1.0f;
 	S.GodRaysTint = FLinearColor(1, 1, 1, 1);
 
+	S.bSpeedLines = false;
+	S.SpeedLinesIntensity = 0.6f;
+	S.SpeedLinesAngle = -20.0f;
+	S.SpeedLinesCount = 5;
+	S.SpeedLinesSpacing = 14.0f;
+	S.SpeedLinesLength = 520.0f;
+	S.SpeedLinesThickness = 1.5f;
+	S.SpeedLinesTint = FLinearColor(1, 1, 1, 1);
+
 	S.GhostIntensity = 0.0f;
 	S.GhostCount = 4;
 	S.GhostSpacing = 0.45f;
@@ -150,6 +159,86 @@ void Apply(ETrueGlowPreset Preset, UTrueGlowSettings& S)
 		S.GlareIntensity = 0.10f;
 		break;
 
+	case ETrueGlowPreset::EnergyBlue:
+		// 参考图①：∞ 能量环——大范围蓝晕 + 横向冰蓝光条 + 交叉点亮芒 + 彩虹边 + 小幻影
+		S.BloomIntensity = 1.5f;
+		S.BloomBrightMultiplier = 1.1f;
+		S.ChromaticDispersion = 0.25f;
+		S.FilmSoftIntensity = 0.40f;
+		S.DualTintStrength = 0.30f;
+		S.StreakIntensity = 0.50f;
+		S.StreakLength = 600.0f;
+		S.StreakTint = FLinearColor(0.55f, 0.75f, 1.00f, 1.0f);
+		S.bStarFilter = true;
+		S.StarFilterIntensity = 0.4f;
+		S.StarFilterRays = 6;
+		S.GhostIntensity = 0.30f;
+		S.HaloIntensity = 0.10f;
+		S.GlareIntensity = 0.35f;
+		break;
+
+	case ETrueGlowPreset::BallisticRed:
+		// 参考图②：红色弹道——过曝白核 + 红雾散射 + 横向红光条 + 斜向平行速度线
+		S.BloomIntensity = 2.0f;
+		S.BloomThreshold = 1.2f;
+		S.BloomBrightMultiplier = 1.5f;
+		S.ChromaticDispersion = 0.10f;
+		S.FilmSoftIntensity = 0.60f;
+		S.DualTintStrength = 0.25f;
+		S.StreakIntensity = 0.60f;
+		S.StreakLength = 560.0f;
+		S.StreakTint = FLinearColor(1.00f, 0.30f, 0.20f, 1.0f);
+		S.GhostIntensity = 0.20f;
+		S.GlareIntensity = 0.20f;
+		S.bSpeedLines = true;
+		S.SpeedLinesIntensity = 0.7f;
+		S.SpeedLinesAngle = -20.0f;
+		S.SpeedLinesCount = 5;
+		S.SpeedLinesSpacing = 14.0f;
+		S.SpeedLinesLength = 520.0f;
+		S.SpeedLinesTint = FLinearColor(1.0f, 0.25f, 0.15f, 1.0f);
+		break;
+
+	case ETrueGlowPreset::RedSun:
+		// 参考图③：红日穿云——8 级超宽红雾 + 低阈值 + 横向长拉丝 + 云隙光束
+		S.BloomIntensity = 2.5f;
+		S.BloomThreshold = 0.6f;
+		S.BloomBrightMultiplier = 1.2f;
+		S.BloomLevels = 8;
+		S.ChromaticDispersion = 0.15f;
+		S.FilmSoftIntensity = 0.80f;
+		S.DualTintStrength = 0.45f;
+		S.StreakIntensity = 0.55f;
+		S.StreakLength = 800.0f;
+		S.StreakTint = FLinearColor(1.00f, 0.35f, 0.25f, 1.0f);
+		S.GhostIntensity = 0.15f;
+		S.bGodRays = true;
+		S.GodRaysIntensity = 0.8f;
+		S.GodRaysTint = FLinearColor(1.0f, 0.55f, 0.35f, 1.0f);
+		S.GlareIntensity = 0.15f;
+		break;
+
+	case ETrueGlowPreset::TechBlue:
+		// 参考图④：蓝色能量弹——白炽光核 + 蓝色体积雾 + 弹头光束 + 横向蓝光条
+		S.BloomIntensity = 1.8f;
+		S.BloomBrightMultiplier = 1.2f;
+		S.ChromaticDispersion = 0.20f;
+		S.FilmSoftIntensity = 0.50f;
+		S.DualTintStrength = 0.30f;
+		S.StreakIntensity = 0.60f;
+		S.StreakLength = 520.0f;
+		S.StreakTint = FLinearColor(0.45f, 0.70f, 1.00f, 1.0f);
+		S.bStarFilter = true;
+		S.StarFilterIntensity = 0.25f;
+		S.StarFilterRays = 4;
+		S.GhostIntensity = 0.25f;
+		S.HaloIntensity = 0.15f;
+		S.bGodRays = true;
+		S.GodRaysIntensity = 0.7f;
+		S.GodRaysTint = FLinearColor(0.50f, 0.75f, 1.00f, 1.0f);
+		S.GlareIntensity = 0.30f;
+		break;
+
 	case ETrueGlowPreset::Custom:
 	default:
 		break;
@@ -172,6 +261,22 @@ bool ApplyByName(const FString& PresetName, UTrueGlowSettings& OutSettings)
 	else if (Name == TEXT("subtle"))
 	{
 		Preset = ETrueGlowPreset::Subtle;
+	}
+	else if (Name == TEXT("energy") || Name == TEXT("energyblue"))
+	{
+		Preset = ETrueGlowPreset::EnergyBlue;
+	}
+	else if (Name == TEXT("ballistic") || Name == TEXT("ballisticred"))
+	{
+		Preset = ETrueGlowPreset::BallisticRed;
+	}
+	else if (Name == TEXT("redsun"))
+	{
+		Preset = ETrueGlowPreset::RedSun;
+	}
+	else if (Name == TEXT("tech") || Name == TEXT("techblue"))
+	{
+		Preset = ETrueGlowPreset::TechBlue;
 	}
 	else
 	{

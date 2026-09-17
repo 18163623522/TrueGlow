@@ -38,7 +38,7 @@
 | 操作 | 方式 |
 |---|---|
 | 调参 | **Window → TrueGlow** 面板窗口（唯一 UI 入口：预设按钮 + 全参数实时预览） |
-| 预设 | 设置页 Preset 下拉：**鸣潮 WuWa**（默认）/ Neon 赛博 / Subtle 克制；或控制台 `tg.ApplyPreset Neon` |
+| 预设 | 设置页 Preset 下拉：**鸣潮 WuWa**（默认）/ Neon 赛博 / Subtle 克制 / **能量蓝 EnergyBlue** / **弹道红 BallisticRed**（含速度线）/ **红日 RedSun**（8 级宽雾+光束）/ **科技蓝 TechBlue**（光束+星芒镜）；或控制台 `tg.ApplyPreset Neon` |
 | 开关对比 | `tg.Enable 0` / `1`（0 = 完全旁路零开销） |
 | 关引擎 bloom | 控制台 `tg.SetupVolume`（防双重辉光，建议进关卡先跑一次） |
 | 实时微调 | `tg.Bloom.Intensity`、`tg.Bloom.Threshold`、`tg.Bloom.Levels`、`tg.Streak.Intensity`、`tg.Streak.Length`、`tg.Glare.Intensity`（负值=不覆盖设置页） |
@@ -68,6 +68,11 @@
 **圆盘 Disc**（bokeh 虚化圈）、**六边形 Hexagon**（光圈形状）、**十字 Cross**。3 环×8 tap
 圆环采样 + 形状距离场加权，与高斯结果按 `形状混合 ShapeMix` 混合；粗级（低分辨率）等效
 屏幕半径逐级翻倍，bokeh 大圈由粗级主导。蓝图可切（`SetBloomKernelShape`）。
+
+**速度线 SpeedLines**（v0.8）：围绕高亮源、沿**任意角度**的 N 条平行细光（弹道/速度线感，
+AE 运动模糊速度线同款形态）。中心线最长最亮，向外逐条变短变淡；角度/根数/间距/长度/
+粗细/颜色全参数，蓝图全套 `SetSpeedLines*`。单 pass ¼ 分辨率，Mip 级联采样无断层；
+方向在像素空间构造，任意视口宽高比下角度不扭斜。金字塔层数上限同步放宽到 **8 级**。
 
 **电影质感 Cinematic 套件**（各自独立开关）：
 | 效果 | 说明 |
