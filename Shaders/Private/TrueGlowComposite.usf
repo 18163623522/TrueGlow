@@ -61,7 +61,10 @@ float SpeedLinesIntensity;
 
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
-	const float2 UV = SvPosition.xy * Output_ExtentInverse;
+	// 子矩形安全：SvPosition 在纹理上位于 ViewRect 子矩形内，先换算到视口 UV [0,1]
+	// （矩形=整幅时 UVViewportMin=0/Size=1，与旧版行为一致）
+	const float2 TexUV = SvPosition.xy * Output_ExtentInverse;
+	const float2 UV = (TexUV - Output_UVViewportMin) / max(Output_UVViewportSize, float2(0.0001, 0.0001));
 
 	const float2 SceneUV = clamp(
 		UV * SceneUVScaleBias.xy + SceneUVScaleBias.zw,

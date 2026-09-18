@@ -669,18 +669,25 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	}
 
 	// ------------------------------------------------------------------
-	// 5) 全分辨率合成（输出纹理与视图等尺寸，ViewRect 重定为全幅）
-	FRDGTextureRef OutTexture = CreateGlowTexture(GraphBuilder, FullSize, TEXT("TrueGlow.SceneColorOut"));
+	// 5) 全分辨率合成。
+	// 引擎约定（PostProcessMotionBlur.cpp:832 先例）：pass 返回必须保留输入 SceneColor 的
+	// ViewRect，输出纹理与输入同族布局（同 extent、只写 ViewRect 子矩形）。
+	// 编辑器视口的 SceneColor 常是池化大纹理里的子矩形（ViewRect ≠ 纹理尺寸），
+	// 若返回 (0,0,FullSize) 自建纹理，下游按 View.ViewRect 索引会错位 → 边缘拉伸伪影。
+	const FIntPoint SceneExtent = SceneColor.Texture->Desc.Extent;
+	FRDGTextureRef OutTexture = CreateGlowTexture(GraphBuilder, SceneExtent, TEXT("TrueGlow.SceneColorOut"));
 	{
 		RDG_GPU_STAT_SCOPE(GraphBuilder, TrueGlowComposite);
-		const FScreenPassTextureViewportParameters OutParams = GetExactViewportParams(FullSize);
-		const FScreenPassTextureViewportTransform Transform =
-			GetScreenPassTextureViewportTransform(SceneParams, OutParams);
+		// 输出视口 = 输入矩形（子矩形安全）；场景采样直接用 SceneParams 的 UVViewport 映射
+		const FScreenPassTextureViewportParameters OutParams =
+			GetScreenPassTextureViewportParameters(FScreenPassTextureViewport(SceneColor));
 
 		FTrueGlowCompositePS::FParameters* Prm = GraphBuilder.AllocParameters<FTrueGlowCompositePS::FParameters>();
 		Prm->Scene = SceneParams;
 		Prm->Output = OutParams;
-		Prm->SceneUVScaleBias = FVector4(Transform.Scale.X, Transform.Scale.Y, Transform.Bias.X, Transform.Bias.Y);
+		Prm->SceneUVScaleBias = FVector4(
+			SceneParams.UVViewportSize.X, SceneParams.UVViewportSize.Y,
+			SceneParams.UVViewportMin.X, SceneParams.UVViewportMin.Y);
 		Prm->SceneTexture = SceneColor.Texture;
 		Prm->SceneSampler = BilinearClampSampler;
 		Prm->BloomTexture = BloomResult;
@@ -731,9 +738,10 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 		FPixelShaderUtils::AddFullscreenPass(
 			GraphBuilder, ShaderMap,
 			RDG_EVENT_NAME("TrueGlow.Composite %dx%d", FullSize.X, FullSize.Y),
-			Shader, Prm, FIntRect(FIntPoint::ZeroValue, FullSize));
+			Shader, Prm, FIntRect(SceneColor.ViewRect.Min, SceneColor.ViewRect.Max));
 	}
 
-	return FScreenPassTexture(OutTexture, FIntRect(FIntPoint::ZeroValue, FullSize));
+	// 保留输入 ViewRect（引擎 pass 约定）；游戏视口 = (0,0,全尺寸)，行为与旧版一致
+	return FScreenPassTexture(OutTexture, SceneColor.ViewRect);
 #endif // KG_SHADERS_ENABLED
 }

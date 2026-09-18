@@ -31,6 +31,14 @@ float InterleavedGradientNoise(float2 P)
 	return frac(52.9829189 * frac(dot(P, float2(0.06711056, 0.00583715))));
 }
 
+// 屏幕边缘淡出：出屏采样点能量在 3% 边带内平滑衰减到 0（防边缘拉丝伪影）
+float BorderFade(float2 UVraw)
+{
+	const float B = 0.03;
+	float2 F = saturate(min(UVraw, 1.0 - UVraw) / B);
+	return F.x * F.y;
+}
+
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
 	float2 UV = SvPosition.xy * Output_ExtentInverse;
@@ -46,7 +54,7 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 
 	for (int k = 0; k < Steps; ++k)
 	{
-		Accum += SampleBrightLum(P) * Illum;
+		Accum += SampleBrightLum(P) * Illum * BorderFade(P);   // 出屏采样淡出
 		P += Dir;
 		Illum *= Decay;
 	}

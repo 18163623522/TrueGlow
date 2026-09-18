@@ -38,6 +38,15 @@ float3 SampleStreakMip(float2 UVm, int Mip)
 	return StreakMip3.SampleLevel(StreakMip3Sampler, UVm, 0).rgb;
 }
 
+// 屏幕边缘淡出：tap 越过视口边界时能量在 3% 边带内平滑衰减到 0。
+// 消除贴边高亮被钳位采样从边框向内拉出贯穿长线的"边缘拉伸"伪影。
+float BorderFade(float2 UVraw)
+{
+	const float B = 0.03;
+	float2 F = saturate(min(UVraw, 1.0 - UVraw) / B);
+	return F.x * F.y;
+}
+
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
 	const float2 UV = SvPosition.xy * Output_ExtentInverse;
@@ -59,8 +68,11 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		const int Mip = clamp(int(log2(max(D / 1.5, 1.0))), 0, 3);
 
 		const float2 Off = Direction * (D * Input_ExtentInverse);
-		Sum += w * (SampleStreakMip(UVC + Off, Mip) + SampleStreakMip(UVC - Off, Mip));
-		TotalWeight += 2.0 * w;
+		// 淡出权重按未钳位采样位置计算，并同步计入归一化分母（能量守恒）
+		const float w1 = w * BorderFade(UV + Off);
+		const float w2 = w * BorderFade(UV - Off);
+		Sum += w1 * SampleStreakMip(UVC + Off, Mip) + w2 * SampleStreakMip(UVC - Off, Mip);
+		TotalWeight += w1 + w2;
 	}
 
 	float3 Result = Sum / max(TotalWeight, 0.0001) * SelfTint.rgb;

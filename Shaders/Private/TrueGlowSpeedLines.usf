@@ -50,6 +50,14 @@ float3 TapLine(float2 BaseUV, float2 DirUV, float2 PerpUV, float D, float S)
 		) * 0.25;
 }
 
+// 屏幕边缘淡出：tap 越过视口边界时能量在 3% 边带内平滑衰减到 0（防边缘拉伸伪影）
+float BorderFade(float2 UVraw)
+{
+	const float B = 0.03;
+	float2 F = saturate(min(UVraw, 1.0 - UVraw) / B);
+	return F.x * F.y;
+}
+
 void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 {
 	const float2 UV = SvPosition.xy * Output_ExtentInverse;
@@ -73,8 +81,8 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		const float Growth = pow(max(LineLen, D0 * 2.0) / D0, InvT);
 
 		// 第 k 条线的源采样位置：沿垂直方向平移 k·Spacing
-		const float2 SrcUV = clamp(UV + PerpUV * (float(k) * SpacingTexels),
-			Input_UVViewportBilinearMin, Input_UVViewportBilinearMax);
+		const float2 SrcRaw = UV + PerpUV * (float(k) * SpacingTexels);
+		const float2 SrcUV = clamp(SrcRaw, Input_UVViewportBilinearMin, Input_UVViewportBilinearMax);
 
 		float3 LineSum = float3(0, 0, 0);
 		float LineWeight = 0.0;
@@ -82,8 +90,12 @@ void MainPS(float4 SvPosition : SV_POSITION, out float4 OutColor : SV_Target0)
 		{
 			const float D = D0 * pow(Growth, float(t));
 			const float w = exp(-float(t) * InvT * 3.0);          // 沿线衰减
-			LineSum += w * (TapLine(SrcUV, DirUV, PerpUV, D, S) + TapLine(SrcUV, DirUV, PerpUV, -D, S));
-			LineWeight += 2.0 * w;
+			const float2 Off = DirUV * D;
+			// 边缘淡出按未钳位采样位置计算，同步计入归一化分母（能量守恒）
+			const float f1 = w * BorderFade(SrcRaw + Off);
+			const float f2 = w * BorderFade(SrcRaw - Off);
+			LineSum += f1 * TapLine(SrcUV, DirUV, PerpUV, D, S) + f2 * TapLine(SrcUV, DirUV, PerpUV, -D, S);
+			LineWeight += f1 + f2;
 		}
 
 		Sum += LineW * LineSum / max(LineWeight, 0.0001);
