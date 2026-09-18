@@ -152,8 +152,12 @@ FScreenPassTexture FTrueGlowViewExtension::AfterMotionBlur_RenderThread(
 	auto AddBrightHalfPass = [&](float Threshold, float Knee, const FVector4& Tint, const TCHAR* Name) -> FRDGTextureRef
 	{
 		const FScreenPassTextureViewportParameters HalfParams = GetExactViewportParams(HalfSize);
+		// 引擎语义：Transform(Source, Destination) 把 Source UV 映射到 Destination UV（ScreenPass.inl:168）。
+		// 本 pass 需要"输出(½res) UV → 场景 UV"，故 Source=Half、Destination=Scene。
+		// 传反时恒等视口（游戏）不受影响，但池化纹理（编辑器 ViewRect≠Extent）会把
+		// 场景内容按 Size² 压向左上角 → 辉光与光源错位。
 		const FScreenPassTextureViewportTransform Transform =
-			GetScreenPassTextureViewportTransform(SceneParams, HalfParams);
+			GetScreenPassTextureViewportTransform(HalfParams, SceneParams);
 
 		FRDGTextureRef Target = CreateGlowTexture(GraphBuilder, HalfSize, Name);
 
